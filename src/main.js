@@ -1,62 +1,89 @@
 import './style.css';
-import Player from './Ship.js';
-import Asteroid from './Asteroid.js';
+import Ship from './js/Ship/Ship';
+import Asteroid from './js/Asteroid';
+import Collider from './js/core/Collider';
+import Explosion from './js/Explosion';
 
-const WIDTH = 640;
-const HEIGHT = 480;
+const WIDTH = 1024;
+const HEIGHT = 768;
 
 const canvas = document.createElement('canvas');
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
 const context = canvas.getContext('2d');
-const player = new Player({
+document.body.appendChild(canvas);
+
+const ship = new Ship({
   position: [WIDTH / 2, HEIGHT / 2],
 });
+ship.attachToContext(context);
+const shipCollider = new Collider({
+  size: ship.size,
+  visible: true,
+});
+shipCollider.attachToContext(context);
+ship.addCollider(shipCollider);
 
-const playerController = {
+const shipController = {
   rotation: 0,
-  rotationValue: 0,
   acceleration: 0,
   run() {
-    if (playerController.rotation < 0) {
-      playerController.rotationValue -= 0.08;
+    if (shipController.rotation < 0) {
+      ship.rotateLeft();
     }
-    if (playerController.rotation > 0) {
-      playerController.rotationValue += 0.08;
+    if (shipController.rotation > 0) {
+      ship.rotateRight();
     }
 
-    player.setRotation(playerController.rotationValue);
-    if (playerController.acceleration) {
-      player.accelerate();
+    if (shipController.acceleration) {
+      ship.accelerate();
+    } else {
+      ship.stop();
     }
   },
 };
 
+const setupNewAsteroid = (args) => {
+  const asteroid = new Asteroid({
+    position: args.position,
+    type: args.type,
+  });
+  asteroid.attachToContext(args.context);
+  const asteroidCollider = new Collider();
+  asteroidCollider.attachToContext(args.context);
+
+  asteroid.addCollider(asteroidCollider);
+  return asteroid;
+};
+
 const asteroids = [];
-for (let index = 0; index < 1; index++) {
-  asteroids.push(
-    new Asteroid({
-      position: [Math.random() * WIDTH, Math.random() * HEIGHT],
-    })
-  );
+const explosions = [];
+
+for (let index = 0; index < 4; index++) {
+  const asteroid = new Asteroid({
+    position: [Math.random() * WIDTH, Math.random() * HEIGHT],
+  });
+  const asteroidCollider = new Collider({
+    size: asteroid.size,
+    visible: true,
+  });
+  asteroidCollider.attachToContext(context);
+  asteroid.addCollider(asteroidCollider);
+  asteroids.push(asteroid);
 }
 
 const keepInScreenRange = (x, y, sWidth, sHeight, size) => {
   const position = [x, y];
   if (x > sWidth + size) {
-    // console.log('out of range', x, y);
     position[0] = x - sWidth - size;
   }
   if (x + size < 0) {
-    // console.log('out of range', x, y);
     position[0] = sWidth + x + size;
   }
   if (y > sHeight + size) {
-    // console.log('out of range', x, y);
     position[1] = y - sHeight - size;
   }
   if (y + size < 0) {
-    // console.log('out of range', x, y);
     position[1] = y + sHeight + size;
   }
   return position;
@@ -65,32 +92,65 @@ const keepInScreenRange = (x, y, sWidth, sHeight, size) => {
 const update = () => {
   context.clearRect(0, 0, WIDTH, HEIGHT);
   context.fillRect(0, 0, WIDTH, HEIGHT);
-  player.render(context);
-  player.update();
+  ship.render();
+  // ship.collider.render();
+  ship.update();
 
-  const [x, y] = player.getPosition();
-  player.setPosition(...keepInScreenRange(x, y, WIDTH, HEIGHT, player.size));
+  const [x, y] = ship.getPosition();
+  const {projectiles} = ship;
 
-  playerController.run();
+  ship.setPosition(...keepInScreenRange(x, y, WIDTH, HEIGHT, ship.size));
+
+  shipController.run();
   asteroids.forEach((asteroid) => {
     asteroid.render(context);
-    if (Math.random() > .99) {
-      asteroid.explode();
-    }
     const [aX, aY] = asteroid.getPosition();
     asteroid.setPosition(
       ...keepInScreenRange(aX, aY, WIDTH, HEIGHT, asteroid.size)
     );
   });
 
-  const {projectiles} = player;
-
-  projectiles.forEach((projectile, index) => {
+  projectiles.forEach((projectile, projectileIdx) => {
     const [pX, pY] = projectile.getPosition();
     const [pXN, pYN] = keepInScreenRange(pX, pY, WIDTH, HEIGHT, 1);
     if (pX !== pXN || pY !== pYN) {
-      projectiles.splice(index, 1);
+      projectiles.splice(projectileIdx, 1);
     }
+    asteroids.forEach((asteroid, asteroidIdx) => {
+      if (asteroid.collider.collides(projectile.collider)) {
+        projectiles.splice(projectileIdx, 1);
+
+        explosions.push(
+          new Explosion({
+            position: asteroid.getPosition(),
+          })
+        );
+
+        const newType = asteroid.type === 'big' ? 'medium' : 'small';
+        const {type} = asteroid;
+
+        if (type !== 'small') {
+          asteroids.push(
+            setupNewAsteroid({
+              type: newType,
+              position: asteroid.getPosition(),
+              context,
+            }),
+            setupNewAsteroid({
+              type: newType,
+              position: asteroid.getPosition(),
+              context,
+            })
+          );
+        }
+
+        asteroids.splice(asteroidIdx, 1);
+      }
+    });
+  });
+
+  explosions.forEach((explosion) => {
+    explosion.render(context);
   });
 
   window.requestAnimationFrame(update);
@@ -98,31 +158,29 @@ const update = () => {
 
 window.requestAnimationFrame(update);
 
-document.body.appendChild(canvas);
-
 document.addEventListener('keydown', ({key}) => {
   if (key === 'ArrowLeft') {
-    playerController.rotation = -1;
+    shipController.rotation = -1;
   }
   if (key === 'ArrowRight') {
-    playerController.rotation = 1;
+    shipController.rotation = 1;
   }
   if (key === 'ArrowUp') {
-    playerController.acceleration = true;
+    shipController.acceleration = true;
   }
 });
 
 document.addEventListener('keyup', ({key}) => {
   if (key === ' ') {
-    player.shoot();
+    ship.shoot();
   }
 });
 
 document.addEventListener('keyup', ({key}) => {
   if (key === 'ArrowLeft' || key === 'ArrowRight') {
-    playerController.rotation = 0;
+    shipController.rotation = 0;
   }
   if (key === 'ArrowUp') {
-    playerController.acceleration = false;
+    shipController.acceleration = false;
   }
 });

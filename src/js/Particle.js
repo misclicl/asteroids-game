@@ -1,11 +1,11 @@
-import GameObject from './GameObject';
-import Vector2d from './Vector2d';
-import {randomFloat} from './utils';
+import GameObject from './core/GameObject';
+import Vector2d from './core/Vector2d';
+import {randomFloat} from './core/utils';
 
 export default class Particle extends GameObject {
   constructor(args) {
     super(args);
-    this.speed = 3;
+    this.speed = 2.8;
 
     this.velocity = new Vector2d(randomFloat(-1, 1), randomFloat(-1, 1)).mult(
       this.speed
@@ -13,7 +13,7 @@ export default class Particle extends GameObject {
   }
   update() {
     this.position = this.position.add(this.velocity);
-    this.velocity = this.velocity.mult(0.95);
+    this.velocity = this.velocity.mult(0.92);
   }
   render(context) {
     const [x, y] = this.getPosition();
@@ -21,7 +21,7 @@ export default class Particle extends GameObject {
     context.save();
     context.translate(x, y);
     context.fillStyle = 'white';
-    context.fillRect(0, 0, 1, 1);
+    context.fillRect(-1, -1, 1, 1);
 
     context.restore();
 

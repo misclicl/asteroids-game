@@ -16,6 +16,6 @@ export default class Vector2d {
     return new Vector2d(Math.min(this.x, value), Math.min(this.y, value));
   }
   isNull() {
-    return (this.x !== 0 && this.y !== 0);
+    return (this.x == 0 && this.y == 0);
   }
 }

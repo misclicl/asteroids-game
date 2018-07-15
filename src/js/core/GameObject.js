@@ -13,12 +13,23 @@ export default class GameObject {
     this.position = new Vector2d(...params.position);
     this.velocity = new Vector2d(0, 0);
     this.rotation = 0;
+    this.context = params.context || null;
+    this.collider = null;
+  }
+  addCollider(collider) {
+    this.collider = collider;
+  }
+  attachToContext(context) {
+    this.context = context;
   }
   getPosition() {
     return this.position.getPosition();
   }
   setPosition(x, y) {
     this.position = new Vector2d(x, y);
+    if (this.collider) {
+      this.collider.setPosition(...new Vector2d(x, y).getPosition());
+    }
   }
   setRotation(value) {
     this.rotation = value;

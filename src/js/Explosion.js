@@ -1,12 +1,12 @@
-import GameObject from './GameObject';
+import GameObject from './core/GameObject';
 import Particle from './Particle';
-import {randomInt} from './utils';
+import {randomInt} from './core/utils';
 
 export default class Explosion extends GameObject {
   constructor(args) {
     super(args);
     this.particles = [];
-    for (let index = 0; index < randomInt(12, 20); index++) {
+    for (let index = 0; index < randomInt(12, 15); index++) {
       this.particles.push(new Particle({
         position: this.getPosition(),
       }));
@@ -34,7 +34,7 @@ export default class Explosion extends GameObject {
     this.particles.forEach((particle) => {
       particle.render(context);
     });
-    if (this.timer > 13) {
+    if (this.timer > 25) {
       this.particles = [];
     }
   }
