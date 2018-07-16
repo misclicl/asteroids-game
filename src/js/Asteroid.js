@@ -1,28 +1,31 @@
-import Vector2d from './core/Vector2d.js';
-import GameObject from './core/GameObject.js';
-import {randomFloat, randomInt} from './core/utils.js';
-import Explosion from './Explosion.js';
+import {plotLine} from './core/plotLine';
+import Vector2d from './core/Vector2d';
+import GameObject from './core/GameObject';
+import {randomFloat, randomInt} from './core/utils';
+import Explosion from './Explosion';
+
+const {round} = Math;
 
 const asteroidDefaults = {
-  minSpeed: 0.5,
-  maxSpeed: 1,
+  minSpeed: 0.7,
+  maxSpeed: 2,
   type: 'big',
 };
 
 const typeParams = {
   small: {
-    sizesRange: [5, 10],
+    sizesRange: [12, 12],
     verticesRange: [5, 9],
     radiusDeviation: 2,
   },
   medium: {
-    sizesRange: [15, 25],
+    sizesRange: [20, 25],
     verticesRange: [5, 9],
     radiusDeviation: 3,
   },
   big: {
-    sizesRange: [45, 56],
-    verticesRange: [7, 12],
+    sizesRange: [50, 65],
+    verticesRange: [9, 13],
     radiusDeviation: 9,
   },
 };
@@ -63,10 +66,10 @@ export default class Asteroid extends GameObject {
     for (let i = 0; i < verticesN; i++) {
       vertices.push(
         new Vector2d(
-          cos(i * iterationStep) * radius +
-            randomFloat(-radiusDeviation, radiusDeviation),
-          sin(i * iterationStep) * radius +
-            randomFloat(-radiusDeviation, radiusDeviation)
+          round(cos(i * iterationStep) * radius +
+            randomFloat(-radiusDeviation, radiusDeviation)),
+          round(sin(i * iterationStep) * radius +
+            randomFloat(-radiusDeviation, radiusDeviation)),
         )
       );
     }
@@ -89,14 +92,12 @@ export default class Asteroid extends GameObject {
       context.save();
       context.translate(x, y);
 
-      context.beginPath();
-      this.vertices.forEach((vertex) => {
-        context.lineTo(...vertex.getPosition());
+      this.vertices.forEach((vertex, index, array) => {
+        const secondPoint = array[index + 1]
+          ? array[index + 1].getPosition()
+          : array[0].getPosition();
+        plotLine(...vertex.getPosition(), ...secondPoint, context);
       });
-      context.lineTo(...this.vertices[0].getPosition());
-
-      context.strokeStyle = 'white';
-      context.stroke();
       context.restore();
 
       this.update();

@@ -12,6 +12,9 @@ export default class Explosion extends GameObject {
       }));
     }
     this.timer = 0;
+    const audio = new Audio(`explosion${randomInt(2, 3)}.wav`);
+    audio.volume = .3;
+    audio.play();
   }
   render(context) {
     this.timer ++;

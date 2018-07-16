@@ -11,6 +11,7 @@ const canvas = document.createElement('canvas');
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
 const context = canvas.getContext('2d');
+context.imageSmoothingEnabled = false;
 document.body.appendChild(canvas);
 
 const ship = new Ship({
@@ -49,7 +50,9 @@ const setupNewAsteroid = (args) => {
     type: args.type,
   });
   asteroid.attachToContext(args.context);
-  const asteroidCollider = new Collider();
+  const asteroidCollider = new Collider({
+    size: asteroid.size * 1.2,
+  });
   asteroidCollider.attachToContext(args.context);
 
   asteroid.addCollider(asteroidCollider);
@@ -91,9 +94,15 @@ const keepInScreenRange = (x, y, sWidth, sHeight, size) => {
 
 const update = () => {
   context.clearRect(0, 0, WIDTH, HEIGHT);
+  context.fillStyle = 'black';
   context.fillRect(0, 0, WIDTH, HEIGHT);
+
+  context.font = '14px Vectorb';
+  context.fillStyle = 'white';
+  context.fillText('0000', 20, 30);
+
   ship.render();
-  // ship.collider.render();
+
   ship.update();
 
   const [x, y] = ship.getPosition();
@@ -103,7 +112,12 @@ const update = () => {
 
   shipController.run();
   asteroids.forEach((asteroid) => {
+    if (ship.collider.collides(asteroid.collider)) {
+      ship.setPosition(WIDTH / 2, HEIGHT / 2);
+    }
+
     asteroid.render(context);
+
     const [aX, aY] = asteroid.getPosition();
     asteroid.setPosition(
       ...keepInScreenRange(aX, aY, WIDTH, HEIGHT, asteroid.size)
@@ -112,10 +126,10 @@ const update = () => {
 
   projectiles.forEach((projectile, projectileIdx) => {
     const [pX, pY] = projectile.getPosition();
-    const [pXN, pYN] = keepInScreenRange(pX, pY, WIDTH, HEIGHT, 1);
-    if (pX !== pXN || pY !== pYN) {
-      projectiles.splice(projectileIdx, 1);
-    }
+    projectile.setPosition(
+      ...keepInScreenRange(pX, pY, WIDTH, HEIGHT, 1)
+    );
+
     asteroids.forEach((asteroid, asteroidIdx) => {
       if (asteroid.collider.collides(projectile.collider)) {
         projectiles.splice(projectileIdx, 1);

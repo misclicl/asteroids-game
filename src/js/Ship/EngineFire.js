@@ -1,4 +1,6 @@
 import GameObject from '../core/GameObject.js';
+import {randomFloat} from '../core/utils.js';
+import {plotLine} from '../core/plotLine';
 
 export default class EngineFire extends GameObject {
   constructor(args) {
@@ -20,13 +22,19 @@ export default class EngineFire extends GameObject {
       contextToUse.translate(x, y);
       contextToUse.rotate(this.rotation);
 
-      contextToUse.moveTo(0 + 2.5, 1 + this.sizeShift);
-      contextToUse.lineTo(0, 8 + this.sizeShift);
-      contextToUse.lineTo(0 - 2.5, 1 + this.sizeShift);
-
-      contextToUse.strokeStyle = 'white';
-      contextToUse.stroke();
-
+      const rand = randomFloat(0, 1);
+      plotLine(
+        2,
+        1 + this.sizeShift,
+        0, (rand > 0.95 ? 10 : 8) + this.sizeShift,
+        contextToUse
+      );
+      plotLine(
+        -2,
+        1 + this.sizeShift,
+        0, (rand > 0.95 ? 10 : 8) + this.sizeShift,
+        contextToUse
+      );
       contextToUse.restore();
     } else if (this.counter > 0) {
       this.counter = -4;

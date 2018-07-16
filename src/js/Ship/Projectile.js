@@ -3,7 +3,7 @@ import GameObject from '../core/GameObject.js';
 export default class Projectile extends GameObject {
   constructor(args) {
     super(args);
-    this.speed = 4;
+    this.speed = 8;
     this.velocity = args.velocity.mult(this.speed);
   }
   update() {
@@ -15,13 +15,9 @@ export default class Projectile extends GameObject {
 
     contextToUse.save();
     contextToUse.translate(x, y);
+    contextToUse.fillStyle = 'white';
+    contextToUse.fillRect(0, 0, 2, 2);
 
-    contextToUse.beginPath();
-    contextToUse.arc(0, 0, 1, 0, Math.PI*2, true);
-    contextToUse.closePath();
-
-    contextToUse.strokeStyle = 'white';
-    contextToUse.stroke();
     contextToUse.restore();
 
     if (hidden) {

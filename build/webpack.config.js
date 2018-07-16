@@ -18,7 +18,7 @@ const envOptions = {
       }),
       new OptimizeCssAssetsPlugin({
         cssProcessor: cssNano,
-        cssProcessorOptions: { discardComments: { removeAll: true } },
+        cssProcessorOptions: {discardComments: {removeAll: true}},
         canPrint: true,
         disable: true,
       }),
@@ -27,7 +27,7 @@ const envOptions = {
   },
   development: {
     devServer: {
-      contentBase: resolve('dist'),
+      contentBase: resolve('public'),
       hot: true,
     },
     devtool: 'eval-source-map',
@@ -69,6 +69,10 @@ const baseConfig = {
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
         loader: 'url-loader',
+      },
+      {
+        test: /\.(ttf|otf|eot|svg|woff(2)?)(\?[a-z0-9]+)?$/,
+        loader: 'file-loader?name=fonts/[name].[ext]',
       },
     ],
   },
