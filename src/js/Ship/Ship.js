@@ -1,7 +1,7 @@
 import Vector2d from '../core/Vector2d.js';
 import GameObject from '../core/GameObject.js';
 import Projectile from './Projectile.js';
-import {radians} from '../core/utils.js';
+import {radians, drawGlowing} from '../core/utils.js';
 import {plotLine} from '../core/plotLine';
 import Collider from '../core/Collider.js';
 import EngineFire from './EngineFire.js';
@@ -12,7 +12,7 @@ const {sin, cos} = Math;
 
 const playerDefaults = {
   size: 18,
-  rotationRate: 0.05,
+  rotationRate: 0.05 * 2.5,
 };
 
 class Ship extends GameObject {
@@ -24,6 +24,7 @@ class Ship extends GameObject {
     this.projectiles = [];
     this.enginesActive = false;
     this.projectileCounter = 0;
+    this.state = true;
 
     this.engineFire = new EngineFire({
       position: this.position,
@@ -147,37 +148,51 @@ class Ship extends GameObject {
     this.enginesActive = true;
     const rotation = this.getRotation();
     const force = new Vector2d(Math.sin(rotation), -Math.cos(rotation));
-    this.velocity = this.velocity.add(force.mult(0.1)).min(6);
+    this.velocity = this.velocity.add(force.mult(0.1 * 2.5)).min(6);
+  }
+  setState(value) {
+    this.state = value;
   }
   render(context) {
-    const [x, y] = this.getPosition();
-    const contextToUse = context || this.context;
-    const {
-      nose,
-      leftTail,
-      rightTail,
-      leftCornerInner,
-      rightCornerInner,
-    } = this.shape;
+    if (this.state) {
+      const [x, y] = this.getPosition();
+      const contextToUse = context || this.context;
+      const {
+        nose,
+        leftTail,
+        rightTail,
+        leftCornerInner,
+        rightCornerInner,
+      } = this.shape;
 
-    this.projectiles.forEach((projectile) => {
-      projectile.render({});
-    });
-    if (this.enginesActive) {
-      this.engineFire.render();
+      this.projectiles.forEach((projectile) => {
+        projectile.render({});
+      });
+
+      drawGlowing([
+        nose,
+        leftTail,
+        leftCornerInner,
+        rightCornerInner,
+        rightTail,
+      ], contextToUse, [x, y], this.rotation);
+
+      if (this.enginesActive) {
+        this.engineFire.render();
+      }
+
+      contextToUse.save();
+      contextToUse.translate(x, y);
+      contextToUse.rotate(this.rotation);
+
+      plotLine(...nose, ...leftTail, contextToUse);
+      plotLine(...nose, ...rightTail, contextToUse);
+      plotLine(...rightTail, ...rightCornerInner, contextToUse);
+      plotLine(...rightCornerInner, ...leftCornerInner, contextToUse);
+      plotLine(...leftCornerInner, ...leftTail, contextToUse);
+
+      contextToUse.restore();
     }
-
-    contextToUse.save();
-    contextToUse.translate(x, y);
-    contextToUse.rotate(this.rotation);
-
-    plotLine(...nose, ...leftTail, contextToUse);
-    plotLine(...nose, ...rightTail, contextToUse);
-    plotLine(...rightTail, ...rightCornerInner, contextToUse);
-    plotLine(...rightCornerInner, ...leftCornerInner, contextToUse);
-    plotLine(...leftCornerInner, ...leftTail, contextToUse);
-
-    contextToUse.restore();
   }
 }
 

@@ -1,5 +1,5 @@
 import GameObject from '../core/GameObject.js';
-import {randomFloat} from '../core/utils.js';
+import {randomFloat, drawGlowing} from '../core/utils.js';
 import {plotLine} from '../core/plotLine';
 
 export default class EngineFire extends GameObject {
@@ -17,6 +17,17 @@ export default class EngineFire extends GameObject {
     if (this.counter <= 4 && this.counter >= 0) {
       const [x, y] = this.getPosition();
       const contextToUse = context || this.context;
+
+      drawGlowing(
+        [
+          [2, 1 + this.sizeShift],
+          [0, (rand > 0.95 ? 10 : 8) + this.sizeShift],
+          [-2, 1 + this.sizeShift],
+        ],
+        contextToUse,
+        [x, y],
+        this.rotation,
+      );
 
       contextToUse.save();
       contextToUse.translate(x, y);

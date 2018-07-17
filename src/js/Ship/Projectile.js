@@ -3,7 +3,7 @@ import GameObject from '../core/GameObject.js';
 export default class Projectile extends GameObject {
   constructor(args) {
     super(args);
-    this.speed = 8;
+    this.speed = 8 * 2.5;
     this.velocity = args.velocity.mult(this.speed);
   }
   update() {

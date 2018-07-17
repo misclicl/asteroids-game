@@ -1,14 +1,14 @@
 import {plotLine} from './core/plotLine';
 import Vector2d from './core/Vector2d';
 import GameObject from './core/GameObject';
-import {randomFloat, randomInt} from './core/utils';
+import {randomFloat, randomInt, drawGlowing} from './core/utils';
 import Explosion from './Explosion';
 
 const {round} = Math;
 
 const asteroidDefaults = {
-  minSpeed: 0.7,
-  maxSpeed: 2,
+  minSpeed: 0.7 * 2.5,
+  maxSpeed: 2 * 2.5,
   type: 'big',
 };
 
@@ -83,6 +83,12 @@ export default class Asteroid extends GameObject {
   }
   render(context) {
     const [x, y] = this.getPosition();
+
+    drawGlowing(
+      this.vertices.map((vertext) => vertext.getPosition()),
+      context,
+      [x, y]
+    );
 
     if (this.explosion) {
       this.explosion.render(context);

@@ -1,6 +1,6 @@
 const setPixel = (x, y, context) => {
-  context.fillStyle = 'rgba(255,255,255,' + 0.5 + ')';
   context.fillRect(x, y, 1, 1);
+  context.fillStyle = 'rgb(224,255,255)';
 };
 
 export const plotLine = (x0, y0, x1, y1, context) => {

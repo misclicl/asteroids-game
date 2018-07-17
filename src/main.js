@@ -14,6 +14,16 @@ const context = canvas.getContext('2d');
 context.imageSmoothingEnabled = false;
 document.body.appendChild(canvas);
 
+const state = {
+  score: 0,
+};
+
+const typeScores = {
+  big: 20,
+  medium: 50,
+  small: 100,
+};
+
 const ship = new Ship({
   position: [WIDTH / 2, HEIGHT / 2],
 });
@@ -92,80 +102,105 @@ const keepInScreenRange = (x, y, sWidth, sHeight, size) => {
   return position;
 };
 
+let fps = 27;
+let now;
+let then = Date.now();
+let interval = 1000/fps;
+let delta;
+
 const update = () => {
-  context.clearRect(0, 0, WIDTH, HEIGHT);
-  context.fillStyle = 'black';
-  context.fillRect(0, 0, WIDTH, HEIGHT);
+  now = Date.now();
+  delta = now - then;
 
-  context.font = '14px Vectorb';
-  context.fillStyle = 'white';
-  context.fillText('0000', 20, 30);
+  if (delta > interval) {
+    then = now - (delta % interval);
+    context.clearRect(0, 0, WIDTH, HEIGHT);
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, WIDTH, HEIGHT);
 
-  ship.render();
+    context.save();
+    context.font = '24px Vectorb';
+    context.fillStyle = 'rgb(224,255,255)';
+    context.shadowBlur = 12;
+    context.shadowColor = '#92d5e4';
+    context.fillText(`${state.score.toString().padStart(4, '   0')}`, 105, 65);
+    context.restore();
 
-  ship.update();
+    ship.render();
 
-  const [x, y] = ship.getPosition();
-  const {projectiles} = ship;
+    ship.update();
 
-  ship.setPosition(...keepInScreenRange(x, y, WIDTH, HEIGHT, ship.size));
+    const [x, y] = ship.getPosition();
+    const {projectiles} = ship;
 
-  shipController.run();
-  asteroids.forEach((asteroid) => {
-    if (ship.collider.collides(asteroid.collider)) {
-      ship.setPosition(WIDTH / 2, HEIGHT / 2);
-    }
+    ship.setPosition(...keepInScreenRange(x, y, WIDTH, HEIGHT, ship.size));
 
-    asteroid.render(context);
+    shipController.run();
 
-    const [aX, aY] = asteroid.getPosition();
-    asteroid.setPosition(
-      ...keepInScreenRange(aX, aY, WIDTH, HEIGHT, asteroid.size)
-    );
-  });
-
-  projectiles.forEach((projectile, projectileIdx) => {
-    const [pX, pY] = projectile.getPosition();
-    projectile.setPosition(
-      ...keepInScreenRange(pX, pY, WIDTH, HEIGHT, 1)
-    );
-
-    asteroids.forEach((asteroid, asteroidIdx) => {
-      if (asteroid.collider.collides(projectile.collider)) {
-        projectiles.splice(projectileIdx, 1);
-
+    asteroids.forEach((asteroid) => {
+      if (ship.collider.collides(asteroid.collider)) {
+        ship.setState(false);
         explosions.push(
           new Explosion({
-            position: asteroid.getPosition(),
-          })
+            position: ship.getPosition(),
+          }),
         );
+        ship.setPosition(WIDTH / 2, HEIGHT / 2);
+      }
 
-        const newType = asteroid.type === 'big' ? 'medium' : 'small';
-        const {type} = asteroid;
+      asteroid.render(context);
 
-        if (type !== 'small') {
-          asteroids.push(
-            setupNewAsteroid({
-              type: newType,
+      const [aX, aY] = asteroid.getPosition();
+      asteroid.setPosition(
+        ...keepInScreenRange(aX, aY, WIDTH, HEIGHT, asteroid.size)
+      );
+    });
+
+    projectiles.forEach((projectile, projectileIdx) => {
+      const [pX, pY] = projectile.getPosition();
+      projectile.setPosition(
+        ...keepInScreenRange(pX, pY, WIDTH, HEIGHT, 1)
+      );
+
+      asteroids.forEach((asteroid, asteroidIdx) => {
+        if (asteroid.collider.collides(projectile.collider)) {
+          projectiles.splice(projectileIdx, 1);
+
+          explosions.push(
+            new Explosion({
               position: asteroid.getPosition(),
-              context,
-            }),
-            setupNewAsteroid({
-              type: newType,
-              position: asteroid.getPosition(),
-              context,
             })
           );
+
+          state.score += typeScores[asteroid.type];
+
+          const newType = asteroid.type === 'big' ? 'medium' : 'small';
+          const {type} = asteroid;
+
+          if (type !== 'small') {
+            asteroids.push(
+              setupNewAsteroid({
+                type: newType,
+                position: asteroid.getPosition(),
+                context,
+              }),
+              setupNewAsteroid({
+                type: newType,
+                position: asteroid.getPosition(),
+                context,
+              })
+            );
+          }
+
+          asteroids.splice(asteroidIdx, 1);
         }
-
-        asteroids.splice(asteroidIdx, 1);
-      }
+      });
     });
-  });
 
-  explosions.forEach((explosion) => {
-    explosion.render(context);
-  });
+    explosions.forEach((explosion) => {
+      explosion.render(context);
+    });
+  }
 
   window.requestAnimationFrame(update);
 };
