@@ -1,4 +1,5 @@
 import Vector2d from './Vector2d';
+import {radians, degrees} from './utils';
 
 const objectDefaults = {
   position: {
@@ -12,12 +13,18 @@ export default class GameObject {
     const params = Object.assign({}, objectDefaults, args);
     this.position = new Vector2d(...params.position);
     this.velocity = new Vector2d(0, 0);
-    this.rotation = 0;
+    this._rotation = 0;
     this.context = params.context || null;
     this.collider = null;
   }
-  addCollider(collider) {
+  setCollider(collider) {
     this.collider = collider;
+  }
+  getCollider() {
+    return this.collider;
+  }
+  removeCollider() {
+    this.collider = null;
   }
   attachToContext(context) {
     this.context = context;
@@ -32,9 +39,12 @@ export default class GameObject {
     }
   }
   setRotation(value) {
-    this.rotation = value;
+    this._rotation = radians(value);
   }
   getRotation() {
-    return this.rotation;
+    return this._rotation;
+  }
+  getRotationInDegrees() {
+    return degrees(this._rotation);
   }
 };

@@ -1,4 +1,6 @@
 import GameObject from '../core/GameObject.js';
+import {drawGlowing} from '../core/utils.js';
+import Vector2d from '../core/Vector2d.js';
 
 export default class Projectile extends GameObject {
   constructor(args) {
@@ -13,16 +15,20 @@ export default class Projectile extends GameObject {
     const [x, y] = this.getPosition();
     const contextToUse = context || this.context;
 
+    drawGlowing([new Vector2d(0, 0)], contextToUse, [x, y], 0, true);
+
     contextToUse.save();
     contextToUse.translate(x, y);
-    contextToUse.fillStyle = 'white';
+    contextToUse.fillStyle = 'rgb(224,255,255)';
     contextToUse.fillRect(0, 0, 2, 2);
+
 
     contextToUse.restore();
 
     if (hidden) {
-      if (this.collider) {
-        this.collider.render();
+      const collider = this.getCollider();
+      if (collider) {
+        collider.render();
       }
     }
 

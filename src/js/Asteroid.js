@@ -85,7 +85,7 @@ export default class Asteroid extends GameObject {
     const [x, y] = this.getPosition();
 
     drawGlowing(
-      this.vertices.map((vertext) => vertext.getPosition()),
+      this.vertices,
       context,
       [x, y]
     );
@@ -100,9 +100,9 @@ export default class Asteroid extends GameObject {
 
       this.vertices.forEach((vertex, index, array) => {
         const secondPoint = array[index + 1]
-          ? array[index + 1].getPosition()
-          : array[0].getPosition();
-        plotLine(...vertex.getPosition(), ...secondPoint, context);
+          ? array[index + 1]
+          : array[0];
+        plotLine(vertex, secondPoint, context);
       });
       context.restore();
 

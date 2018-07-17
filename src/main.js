@@ -33,7 +33,7 @@ const shipCollider = new Collider({
   visible: true,
 });
 shipCollider.attachToContext(context);
-ship.addCollider(shipCollider);
+ship.setCollider(shipCollider);
 
 const shipController = {
   rotation: 0,
@@ -65,7 +65,7 @@ const setupNewAsteroid = (args) => {
   });
   asteroidCollider.attachToContext(args.context);
 
-  asteroid.addCollider(asteroidCollider);
+  asteroid.setCollider(asteroidCollider);
   return asteroid;
 };
 
@@ -81,7 +81,7 @@ for (let index = 0; index < 4; index++) {
     visible: true,
   });
   asteroidCollider.attachToContext(context);
-  asteroid.addCollider(asteroidCollider);
+  asteroid.setCollider(asteroidCollider);
   asteroids.push(asteroid);
 }
 
@@ -102,7 +102,7 @@ const keepInScreenRange = (x, y, sWidth, sHeight, size) => {
   return position;
 };
 
-let fps = 27;
+let fps = 29;
 let now;
 let then = Date.now();
 let interval = 1000/fps;
@@ -138,7 +138,7 @@ const update = () => {
     shipController.run();
 
     asteroids.forEach((asteroid) => {
-      if (ship.collider.collides(asteroid.collider)) {
+      if (ship.getCollider().collides(asteroid.getCollider())) {
         ship.setState(false);
         explosions.push(
           new Explosion({
@@ -163,7 +163,7 @@ const update = () => {
       );
 
       asteroids.forEach((asteroid, asteroidIdx) => {
-        if (asteroid.collider.collides(projectile.collider)) {
+        if (asteroid.getCollider().collides(projectile.getCollider())) {
           projectiles.splice(projectileIdx, 1);
 
           explosions.push(

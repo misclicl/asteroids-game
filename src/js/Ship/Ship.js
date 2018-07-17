@@ -6,13 +6,11 @@ import {plotLine} from '../core/plotLine';
 import Collider from '../core/Collider.js';
 import EngineFire from './EngineFire.js';
 
-const {round} = Math;
-
-const {sin, cos} = Math;
+const {sin, cos, round} = Math;
 
 const playerDefaults = {
   size: 18,
-  rotationRate: 0.05 * 2.5,
+  rotationRate: 5,
 };
 
 class Ship extends GameObject {
@@ -25,25 +23,25 @@ class Ship extends GameObject {
     this.enginesActive = false;
     this.projectileCounter = 0;
     this.state = true;
+    this.shape = this.calculateShape();
 
     this.engineFire = new EngineFire({
       position: this.position,
-      rotation: this.rotation,
+      rotation: this._rotation,
       sizeShift: this.size / 2,
     });
-
-    this.shape = this.calculateShape();
   }
   setPosition(x, y) {
     this.position = new Vector2d(x, y);
     const [newX, newY] = this.position.getPosition();
-    if (this.collider) {
-      this.collider.setPosition(newX, newY);
+    const collider = this.getCollider();
+    if (collider) {
+      collider.setPosition(newX, newY);
     }
     this.engineFire.setPosition(newX, newY);
   }
   setRotation(value) {
-    this.rotation = value;
+    this._rotation = radians(value);
     this.engineFire.setRotation(value);
   }
   attachToContext(context) {
@@ -55,41 +53,39 @@ class Ship extends GameObject {
     const noseAngleInRadians = radians(17);
     const innerAngleInRadians = radians(6);
 
-    const shape = {
-      nose: [0, -size / 2],
-    };
-
     const unitVectorX = sin(noseAngleInRadians);
     const unitVectorY = cos(noseAngleInRadians);
     const unitVectorXInner = sin(innerAngleInRadians);
     const unitVectorYInner = cos(innerAngleInRadians);
 
-    shape.leftCorner = [unitVectorX * size, unitVectorY * size + shape.nose[1]];
-    shape.leftCornerInner = [
+    const nose = [0, -size / 2];
+    const leftCorner = [unitVectorX * size, unitVectorY * size + nose[1]];
+    const rightCorner = [-unitVectorX * size, unitVectorY * size + nose[1]];
+    const leftCornerInner = [
       unitVectorXInner * size,
-      unitVectorYInner * size + shape.nose[1],
+      unitVectorYInner * size + nose[1],
     ];
-    shape.rightCorner = [
-      -unitVectorX * size,
-      unitVectorY * size + shape.nose[1],
-    ];
-    shape.rightCornerInner = [
+    const rightCornerInner = [
       -unitVectorXInner * size,
-      unitVectorYInner * size + shape.nose[1],
+      unitVectorYInner * size + nose[1],
     ];
-    shape.leftTail = [
-      unitVectorX * 5 + shape.leftCorner[0],
-      unitVectorY * 5 + shape.leftCorner[1],
+    const leftTail = [
+      unitVectorX * 5 + leftCorner[0],
+      unitVectorY * 5 + leftCorner[1],
     ];
-    shape.rightTail = [
-      -unitVectorX * 5 + shape.rightCorner[0],
-      unitVectorY * 5 + shape.rightCorner[1],
+    const rightTail = [
+      -unitVectorX * 5 + rightCorner[0],
+      unitVectorY * 5 + rightCorner[1],
     ];
-    for (let point in shape) {
-      if (shape.hasOwnProperty(point)) {
-        shape[point] = shape[point].map(round);
-      }
-    }
+
+    const shape = {
+      nose: new Vector2d(...nose),
+      leftTail: new Vector2d(...leftTail),
+      rightTail: new Vector2d(...rightTail),
+      rightCornerInner: new Vector2d(...rightCornerInner),
+      leftCornerInner: new Vector2d(...leftCornerInner),
+    };
+
     return shape;
   }
   update() {
@@ -100,16 +96,18 @@ class Ship extends GameObject {
     if (this.projectiles.length <= 3) {
       const audio = new Audio('shot.wav');
       audio.play();
+
       const rotation = this.getRotation();
       const projectilePosition = new Vector2d(
-        Math.sin(rotation),
-        -Math.cos(rotation)
+        sin(rotation),
+        -cos(rotation)
       ).mult(this.size / 2);
+
       const projectileVector = this.position.add(projectilePosition);
 
       const projectile = new Projectile({
         position: projectileVector.getPosition(),
-        velocity: new Vector2d(Math.sin(rotation), -Math.cos(rotation)),
+        velocity: new Vector2d(sin(rotation), -cos(rotation)),
       });
 
       const projectileCollider = new Collider({
@@ -117,7 +115,7 @@ class Ship extends GameObject {
       });
       projectile.attachToContext(this.context);
       projectileCollider.attachToContext(this.context);
-      projectile.addCollider(projectileCollider);
+      projectile.setCollider(projectileCollider);
       projectile.id = this.projectileCounter;
 
       this.projectiles.push(projectile);
@@ -136,10 +134,11 @@ class Ship extends GameObject {
     }
   }
   rotateRight() {
-    this.setRotation(this.rotation + this.rotationRate);
+    const newRotation = this.getRotationInDegrees() + this.rotationRate;
+    this.setRotation(newRotation);
   }
   rotateLeft() {
-    this.setRotation(this.rotation - this.rotationRate);
+    this.setRotation(this.getRotationInDegrees() - this.rotationRate);
   }
   stop() {
     this.enginesActive = false;
@@ -147,7 +146,7 @@ class Ship extends GameObject {
   accelerate() {
     this.enginesActive = true;
     const rotation = this.getRotation();
-    const force = new Vector2d(Math.sin(rotation), -Math.cos(rotation));
+    const force = new Vector2d(sin(rotation), -cos(rotation));
     this.velocity = this.velocity.add(force.mult(0.1 * 2.5)).min(6);
   }
   setState(value) {
@@ -157,39 +156,51 @@ class Ship extends GameObject {
     if (this.state) {
       const [x, y] = this.getPosition();
       const contextToUse = context || this.context;
+
+      this.projectiles.forEach((projectile) => {
+        projectile.render({});
+      });
+
+      const shape = Object.assign({}, this.shape);
+
+      for (let point in shape) {
+        if (shape.hasOwnProperty(point)) {
+          shape[point] = shape[point].rotate(this.getRotation());
+        }
+      }
+
       const {
         nose,
         leftTail,
         rightTail,
         leftCornerInner,
         rightCornerInner,
-      } = this.shape;
+      } = shape;
 
-      this.projectiles.forEach((projectile) => {
-        projectile.render({});
-      });
-
-      drawGlowing([
-        nose,
-        leftTail,
-        leftCornerInner,
-        rightCornerInner,
-        rightTail,
-      ], contextToUse, [x, y], this.rotation);
+      drawGlowing(
+        [
+          nose,
+          leftTail,
+          leftCornerInner,
+          rightCornerInner,
+          rightTail,
+        ],
+        contextToUse,
+        [x, y],
+      );
 
       if (this.enginesActive) {
         this.engineFire.render();
       }
 
       contextToUse.save();
-      contextToUse.translate(x, y);
-      contextToUse.rotate(this.rotation);
+      contextToUse.translate(round(x), round(y));
 
-      plotLine(...nose, ...leftTail, contextToUse);
-      plotLine(...nose, ...rightTail, contextToUse);
-      plotLine(...rightTail, ...rightCornerInner, contextToUse);
-      plotLine(...rightCornerInner, ...leftCornerInner, contextToUse);
-      plotLine(...leftCornerInner, ...leftTail, contextToUse);
+      plotLine(nose, leftTail, contextToUse);
+      plotLine(nose, rightTail, contextToUse);
+      plotLine(rightTail, rightCornerInner, contextToUse);
+      plotLine(rightCornerInner, leftCornerInner, contextToUse);
+      plotLine(leftCornerInner, leftTail, contextToUse);
 
       contextToUse.restore();
     }

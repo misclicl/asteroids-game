@@ -1,6 +1,7 @@
 import GameObject from '../core/GameObject.js';
 import {randomFloat, drawGlowing} from '../core/utils.js';
 import {plotLine} from '../core/plotLine';
+import Vector2d from '../core/Vector2d.js';
 
 export default class EngineFire extends GameObject {
   constructor(args) {
@@ -20,30 +21,28 @@ export default class EngineFire extends GameObject {
 
       drawGlowing(
         [
-          [2, 1 + this.sizeShift],
-          [0, (rand > 0.95 ? 10 : 8) + this.sizeShift],
-          [-2, 1 + this.sizeShift],
+          new Vector2d(2, 1 + this.sizeShift),
+          new Vector2d(0, (rand > 0.95 ? 10 : 8) + this.sizeShift),
+          new Vector2d(-2, 1 + this.sizeShift),
         ],
         contextToUse,
         [x, y],
-        this.rotation,
+        this.getRotation()
       );
 
       contextToUse.save();
       contextToUse.translate(x, y);
-      contextToUse.rotate(this.rotation);
+      contextToUse.rotate(this.getRotation());
 
       const rand = randomFloat(0, 1);
       plotLine(
-        2,
-        1 + this.sizeShift,
-        0, (rand > 0.95 ? 10 : 8) + this.sizeShift,
+        new Vector2d(2, 1 + this.sizeShift),
+        new Vector2d(0, (rand > 0.95 ? 10 : 8) + this.sizeShift),
         contextToUse
       );
       plotLine(
-        -2,
-        1 + this.sizeShift,
-        0, (rand > 0.95 ? 10 : 8) + this.sizeShift,
+        new Vector2d(-2, 1 + this.sizeShift),
+        new Vector2d(0, (rand > 0.95 ? 10 : 8) + this.sizeShift),
         contextToUse
       );
       contextToUse.restore();
