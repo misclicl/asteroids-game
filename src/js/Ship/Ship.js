@@ -10,7 +10,7 @@ const {sin, cos, round} = Math;
 
 const playerDefaults = {
   size: 18,
-  rotationRate: 5,
+  rotationRate: 6,
 };
 
 class Ship extends GameObject {
@@ -23,7 +23,8 @@ class Ship extends GameObject {
     this.enginesActive = false;
     this.projectileCounter = 0;
     this.state = true;
-    this.shape = this.calculateShape();
+    this._shape = this.calculateShape();
+    this._displayedShape = this._shape;
 
     this.engineFire = new EngineFire({
       position: this.position,
@@ -43,6 +44,24 @@ class Ship extends GameObject {
   setRotation(value) {
     this._rotation = radians(value);
     this.engineFire.setRotation(value);
+
+    const shape = Object.assign({}, this._shape);
+
+    for (let point in shape) {
+      if (shape.hasOwnProperty(point)) {
+        shape[point] = shape[point].rotate(this.getRotation());
+      }
+    }
+
+    this._displayedShape = shape;
+
+    if (this.collider) {
+      this.collider.setShape([
+        this._displayedShape.nose,
+        this._displayedShape.leftTail,
+        this._displayedShape.rightTail,
+      ]);
+    };
   }
   attachToContext(context) {
     this.context = context;
@@ -130,7 +149,7 @@ class Ship extends GameObject {
         if (idx >= 0) {
           this.projectiles.splice(idx, 1);
         }
-      }, 1500);
+      }, 1000);
     }
   }
   rotateRight() {
@@ -161,13 +180,7 @@ class Ship extends GameObject {
         projectile.render({});
       });
 
-      const shape = Object.assign({}, this.shape);
-
-      for (let point in shape) {
-        if (shape.hasOwnProperty(point)) {
-          shape[point] = shape[point].rotate(this.getRotation());
-        }
-      }
+      this.collider.render();
 
       const {
         nose,
@@ -175,18 +188,12 @@ class Ship extends GameObject {
         rightTail,
         leftCornerInner,
         rightCornerInner,
-      } = shape;
+      } = this._displayedShape;
 
       drawGlowing(
-        [
-          nose,
-          leftTail,
-          leftCornerInner,
-          rightCornerInner,
-          rightTail,
-        ],
+        [nose, leftTail, leftCornerInner, rightCornerInner, rightTail],
         contextToUse,
-        [x, y],
+        [x, y]
       );
 
       if (this.enginesActive) {

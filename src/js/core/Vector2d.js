@@ -6,6 +6,9 @@ export default class Vector2d {
     this.y = y;
   }
   getPosition() {
+    return [this.x, this.y];
+  }
+  getPositionRounded() {
     return [round(this.x), round(this.y)];
   }
   add(vector) {

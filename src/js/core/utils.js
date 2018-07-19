@@ -13,6 +13,14 @@ export const degrees = (radians) => {
   return radians * 180 / Math.PI;
 };
 
+export const uid = (() => {
+  let _id = 0;
+  return (prefix) => (prefix || '') + _id++;
+})();
+
+export const randomElementFromArray = (array) =>
+  array[Math.floor(Math.random() * array.length)];
+
 export const drawGlowing = (vertices, context, origin, rotation, type) => {
   context.save();
   context.translate(...origin);
@@ -25,8 +33,8 @@ export const drawGlowing = (vertices, context, origin, rotation, type) => {
     const [x0, y0] = vertex.getPosition();
     context.moveTo(x0 + 1, y0 + 1);
     const [x1, y1] = array[index + 1]
-    ? array[index + 1].getPosition()
-    : array[0].getPosition();
+      ? array[index + 1].getPosition()
+      : array[0].getPosition();
     context.lineTo(x1, y1);
     context.lineTo(x1, y1);
     context.lineTo(x1, y1);

@@ -16,7 +16,7 @@ export default class Particle extends GameObject {
     this.velocity = this.velocity.mult(0.92);
   }
   render(context) {
-    const [x, y] = this.getPosition();
+    const [x, y] = this.position.getPositionRounded();
 
     context.save();
     context.translate(x, y);

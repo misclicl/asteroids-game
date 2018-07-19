@@ -12,7 +12,7 @@ export default class Projectile extends GameObject {
     this.setPosition(...this.position.add(this.velocity).getPosition());
   }
   render({context, hidden} = {}) {
-    const [x, y] = this.getPosition();
+    const [x, y] = this.position.getPositionRounded();
     const contextToUse = context || this.context;
 
     drawGlowing([new Vector2d(0, 0)], contextToUse, [x, y], 0, true);
