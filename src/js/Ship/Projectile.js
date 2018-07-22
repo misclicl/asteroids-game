@@ -11,7 +11,10 @@ export default class Projectile extends GameObject {
   update() {
     this.setPosition(...this.position.add(this.velocity).getPosition());
   }
-  render({context, hidden} = {}) {
+  render({context, hidden, update} = {}) {
+    if (update) {
+      this.update();
+    }
     const [x, y] = this.position.getPositionRounded();
     const contextToUse = context || this.context;
 
@@ -31,7 +34,5 @@ export default class Projectile extends GameObject {
         collider.render();
       }
     }
-
-    this.update();
   }
 }

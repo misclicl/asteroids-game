@@ -1,6 +1,6 @@
 import GameObject from '../core/GameObject.js';
 import {randomFloat, drawGlowing} from '../core/utils.js';
-import {plotLine} from '../core/plotLine';
+import {plotLine} from '../core/plotLine.js';
 import Vector2d from '../core/Vector2d.js';
 
 export default class EngineFire extends GameObject {

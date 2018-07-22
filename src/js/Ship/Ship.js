@@ -2,23 +2,20 @@ import Vector2d from '../core/Vector2d.js';
 import GameObject from '../core/GameObject.js';
 import Projectile from './Projectile.js';
 import {radians, drawGlowing} from '../core/utils.js';
-import {plotLine} from '../core/plotLine';
+import {plotLine} from '../core/plotLine.js';
 import Collider from '../core/Collider.js';
 import EngineFire from './EngineFire.js';
 
 const {sin, cos, round} = Math;
 
-const playerDefaults = {
-  size: 18,
-  rotationRate: 6,
-};
-
 class Ship extends GameObject {
   constructor(args) {
-    const params = Object.assign({}, playerDefaults, args);
+    const params = Object.assign({}, Ship.defaults, args);
     super(params);
+    this.initialPosition = params.position;
     this.size = params.size;
     this.rotationRate = params.rotationRate;
+    this.velocity = params.velocity;
     this.projectiles = [];
     this.enginesActive = false;
     this.projectileCounter = 0;
@@ -152,6 +149,12 @@ class Ship extends GameObject {
       }, 1000);
     }
   }
+  reset() {
+    this.setPosition(...this.initialPosition);
+    this.setRotation(0);
+    this.velocity = Ship.defaults.velocity;
+    this.enginesActive = false;
+  }
   rotateRight() {
     const newRotation = this.getRotationInDegrees() + this.rotationRate;
     this.setRotation(newRotation);
@@ -171,16 +174,19 @@ class Ship extends GameObject {
   setState(value) {
     this.state = value;
   }
-  render(context) {
+  render(context, update = true) {
+    if (update) {
+      this.update();
+    }
     if (this.state) {
       const [x, y] = this.getPosition();
       const contextToUse = context || this.context;
 
       this.projectiles.forEach((projectile) => {
-        projectile.render({});
+        projectile.render({update});
       });
 
-      this.collider.render();
+      // this.collider.render();
 
       const {
         nose,
@@ -213,5 +219,11 @@ class Ship extends GameObject {
     }
   }
 }
+
+Ship.defaults = {
+  size: 18,
+  rotationRate: 6,
+  velocity: new Vector2d(0, 0),
+};
 
 export default Ship;

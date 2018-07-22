@@ -29,6 +29,14 @@ const envOptions = {
     devServer: {
       contentBase: resolve('public'),
       hot: true,
+      proxy: {
+        '/api/**': {
+          target: 'http://localhost:3000/',
+          secure: false,
+          changeOrigin: true,
+          logLevel: 'debug',
+        },
+      },
     },
     devtool: 'eval-source-map',
     plugins: [

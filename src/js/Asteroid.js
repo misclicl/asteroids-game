@@ -66,7 +66,10 @@ export default class Asteroid extends GameObject {
       position: this.getPosition(),
     });
   }
-  render(context) {
+  render(context, update = true) {
+    if (update) {
+      this.update();
+    }
     const [x, y] = this.getPosition();
 
     drawGlowing(
@@ -90,8 +93,6 @@ export default class Asteroid extends GameObject {
         plotLine(vertex, secondPoint, context);
       });
       context.restore();
-
-      this.update();
     }
   }
 }
