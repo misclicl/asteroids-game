@@ -1,5 +1,5 @@
 import GameObject from './core/GameObject';
-// import {uid, drawGlowing} from './core/utils';
+import {uid, drawGlowing} from './core/utils';
 import lettersRegular from './resources/symbols';
 import lettersSmall from './resources/symbolsSmall.json';
 import {plotLine} from './core/plotLine';
