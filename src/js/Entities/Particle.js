@@ -1,6 +1,6 @@
-import GameObject from './core/GameObject';
-import Vector2d from './core/Vector2d';
-import {randomFloat} from './core/utils';
+import GameObject from '../core/GameObject';
+import Vector2d from '../core/Vector2d';
+import {randomFloat} from '../core/utils';
 
 export default class Particle extends GameObject {
   constructor(args) {

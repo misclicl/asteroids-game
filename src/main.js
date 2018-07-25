@@ -13,6 +13,7 @@ const context = canvas.getContext('2d');
 context.imageSmoothingEnabled = false;
 container.appendChild(canvas);
 const game = new Game({context});
+game.preload();
 
 let fps = 29;
 let now;

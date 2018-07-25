@@ -11,6 +11,8 @@ export default class Collider extends GameObject {
     const params = Object.assign({}, Collider.defaults, args);
     super(params);
     this.blank = params.blank || false;
+    this.context = params.context;
+    this.visible = params.visible;
     this.type = params.type;
     this.hasCollision = false;
 

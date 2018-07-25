@@ -1,10 +1,11 @@
-import Vector2d from '../core/Vector2d.js';
-import GameObject from '../core/GameObject.js';
+import Vector2d from '../../core/Vector2d.js';
+import GameObject from '../../core/GameObject.js';
 import Projectile from './Projectile.js';
-import {radians, drawGlowing} from '../core/utils.js';
-import {plotLine} from '../core/plotLine.js';
-import Collider from '../core/Collider.js';
+import {radians, drawGlowing} from '../../core/utils.js';
+import {plotLine} from '../../core/plotLine.js';
+import Collider from '../../core/Collider.js';
 import EngineFire from './EngineFire.js';
+import Sound from '../../core/Sound.js';
 
 const {sin, cos, round} = Math;
 
@@ -27,6 +28,11 @@ class Ship extends GameObject {
       position: this.position,
       rotation: this._rotation,
       sizeShift: this.size / 2,
+    });
+
+    this.shotSound = new Sound({
+      src: 'pew_1.wav',
+      volume: .5,
     });
   }
   setPosition(x, y) {
@@ -110,8 +116,7 @@ class Ship extends GameObject {
   }
   shoot() {
     if (this.projectiles.length <= 3) {
-      const audio = new Audio('shot.wav');
-      audio.play();
+      this.shotSound.play();
 
       const rotation = this.getRotation();
       const projectilePosition = new Vector2d(

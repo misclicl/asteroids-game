@@ -1,6 +1,6 @@
-import GameObject from '../core/GameObject.js';
-import {drawGlowing} from '../core/utils.js';
-import Vector2d from '../core/Vector2d.js';
+import GameObject from '../../core/GameObject.js';
+import {drawGlowing} from '../../core/utils.js';
+import Vector2d from '../../core/Vector2d.js';
 
 export default class Projectile extends GameObject {
   constructor(args) {

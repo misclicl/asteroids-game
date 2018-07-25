@@ -1,6 +1,6 @@
-import GameObject from './core/GameObject';
+import GameObject from '../core/GameObject';
 import Particle from './Particle';
-import {randomInt} from './core/utils';
+import {randomInt} from '../core/utils';
 
 export default class Explosion extends GameObject {
   constructor(args) {

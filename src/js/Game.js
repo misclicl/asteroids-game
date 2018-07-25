@@ -1,19 +1,18 @@
-import Asteroid from './Asteroid';
-import Collider from './core/Collider';
-import Ship from './Ship/Ship';
-import Explosion from './Explosion';
-import Vector2d from './core/Vector2d';
+import UICollection from './core/UICollection';
 
-import {
-  WIDTH,
-  HEIGHT,
-  GAME_START_TIMEOUT,
-  // RESPAWN_TIMEOUT,
-} from './constants';
+import Asteroid from './Entities/Asteroid';
+import Collider from './core/Collider';
+import Ship from './Entities/Ship/Ship';
+import Explosion from './Entities/Explosion';
+import Vector2d from './core/Vector2d';
+import Saucer from './Entities/Saucer';
+
 import {plotLine} from './core/plotLine';
-import {drawGlowing} from './core/utils';
+import {drawGlowing, randomInt, randomFloat} from './core/utils';
 import Observervable from './core/Observable';
-import UILabel from './UILabel';
+import UILabel from './core/UILabel';
+
+import {WIDTH, HEIGHT, GAME_START_TIMEOUT} from './constants';
 
 const shipShape = [
   new Vector2d(0, -9),
@@ -50,10 +49,9 @@ export default class Game {
   constructor(args) {
     this.currentScore = null;
     this.leaderBoard = null;
-
     this.ship = null;
     this._ship = null;
-    this.lives = 4;
+    this.lives = Game.defaults.lives;
     this.context = args.context;
 
     this.paused = false;
@@ -61,32 +59,13 @@ export default class Game {
     this.asteroids = [];
     this.stage = 1;
     this.state = Game.defaults.state;
+    this.timer = 0;
+    this.stageTimer = 0;
 
-    this.startGameLabel = new UILabel({
-      position: [310, 600],
-      value: 'press ENTER to start',
-      context: this.context,
-    });
-    this.scoreLabel = new UILabel({
-      value: this.currentScore,
-      position: [50, 40],
-      context: this.context,
-    });
-    this.pausedGameLabel = new UILabel({
-      value: 'Paused',
-      position: [WIDTH / 2 - 50, HEIGHT / 2 - 12],
-      context: this.context,
-      visible: false,
-    });
-    this.highestScore = new UILabel({
-      value: '0',
-      position: [WIDTH / 2, 48],
-      size: 'small',
-      context: this.context,
-    });
+    this.uiCollection = new UICollection();
 
+    this.setupUIComponents();
     this.setScore(0);
-
     const shipController = {
       rotation: 0,
       acceleration: 0,
@@ -97,7 +76,6 @@ export default class Game {
         if (shipController.rotation > 0) {
           this.ship.rotateRight();
         }
-
         if (shipController.acceleration) {
           this.ship.accelerate();
         } else {
@@ -128,7 +106,7 @@ export default class Game {
             shipController.acceleration = true;
           }
         },
-        keyup: ({key, keyCode}) => {
+        keyup: ({key, e, keyCode}) => {
           if (keyCode == 27) {
             this.observervable.notify('paused');
           }
@@ -140,6 +118,9 @@ export default class Game {
           }
           if (key === 'ArrowUp') {
             shipController.acceleration = false;
+          }
+          if (key === 'ArrowDown') {
+            this.ship.setPosition(randomInt(0, WIDTH), randomInt(0, HEIGHT));
           }
         },
       },
@@ -161,25 +142,38 @@ export default class Game {
     gameObservervable.subscribe(this.updateUI.bind(this));
     gameObservervable.subscribe(this.updateState.bind(this));
     gameObservervable.subscribe(this.updateEntities.bind(this));
-    gameObservervable.notify(Game.states.MAIN_MENU);
+    gameObservervable.onNotify = (data) => {
+      console.log(data);
+      this.state = data;
+    };
+    gameObservervable.notify(Game.states.INITIAL_LOADING);
     this.observervable = gameObservervable;
 
     this.createShip();
-    // this.sendScore('Asteroids Master', 1000);
+    this.spawnSauser();
   }
   drawLiveIcons() {
-    const {context} = this;
-    context.save();
-    context.translate(75, 100);
-    for (let i = 0; i < this.lives; i++) {
-      drawGlowing(shipShape, context, [0, 0]);
-      shipShape.forEach((vertex, index, array) => {
-        const secondPoint = array[index + 1] ? array[index + 1] : array[0];
-        plotLine(vertex, secondPoint, context);
-      });
-      context.translate(18, 0);
+    if (
+      this.ship ||
+      this.state === 'gameStarted' ||
+      this .state === 'gameResumed'
+    ) {
+      const {context} = this;
+      context.save();
+      context.translate(75, 100);
+      for (let i = 0; i < this.lives; i++) {
+        drawGlowing(shipShape, context, [0, 0]);
+        shipShape.forEach((vertex, index, array) => {
+          const secondPoint = array[index + 1] ? array[index + 1] : array[0];
+          plotLine(vertex, secondPoint, context);
+        });
+        context.translate(18, 0);
+      }
+      context.restore();
     }
-    context.restore();
+  }
+  setHighestScore(value) {
+    this.uiCollection.getComponent('highestScoreLabel').setValue(value);
   }
   sendScore(name, score) {
     fetch('/api/projects/asteroids/setScore', {
@@ -197,7 +191,14 @@ export default class Game {
     });
   }
   updateState(state) {
-    // console.log(state);
+    if (state === Game.states.GAME_OVER) {
+      this.ship = null;
+      this.stage = 1;
+      setTimeout(() => {
+        this.lives = 4;
+        this.observervable.notify(Game.states.MAIN_MENU);
+      }, 2000);
+    }
   }
   updateControlScheme(state) {
     Object.values(Game.states).forEach((state) => {
@@ -237,15 +238,20 @@ export default class Game {
     }
   }
   updateUI(state) {
-    if (state === Game.states.MAIN_MENU) {
+    if (state === Game.states.INITIAL_LOADING) {
+      this.uiCollection.getComponent('loadingLabel').show();
+    } else if (state === Game.states.MAIN_MENU) {
       this.setScore(0);
-      this.startGameLabel.show();
+      this.uiCollection.getComponent('loadingLabel').hide();
+      this.uiCollection.getComponent('startGameLabel').show();
+      this.uiCollection.getComponent('highestScoreLabel').show();
+      this.uiCollection.getComponent('scoreLabel').show();
     } else if (state === Game.states.GAME_STARTED) {
-      this.startGameLabel.hide();
+      this.uiCollection.getComponent('startGameLabel').hide();
     } else if (state === Game.states.PAUSED) {
       this.pausedGameLabel.show();
     } else if (state === Game.states.GAME_RESUMED) {
-      this.pausedGameLabel.hide();
+      this.uiCollection.getComponent('pausedGameLabel').hide();
     }
   }
   updateEntities(state) {
@@ -266,11 +272,13 @@ export default class Game {
   }
   setScore(value) {
     this.currentScore = value;
-    this.scoreLabel.setValue(value.toString().padStart(5, '   0'));
+    this.uiCollection
+      .getComponent('scoreLabel')
+      .setValue(value.toString().padStart(5, '   0'));
   }
   launchStage(stage, delay = 0) {
     setTimeout(() => {
-      this.spawnAsteroids(6 + 2 * stage);
+      this.spawnAsteroids(2 + 2 * stage);
     }, delay);
   }
   createShip() {
@@ -314,14 +322,77 @@ export default class Game {
       this.spawnAsteroids(n - 1);
     }
   }
-  spawnShip(x, y) {
+  spawnShip() {
     this._ship.reset();
     this.ship = this._ship;
+  }
+  spawnSauser(x, y) {
+    const yMin = HEIGHT * 0.2;
+    const yMax = HEIGHT * 0.8;
+    const xPosition = Math.random() > 0.5 ? -50 : WIDTH + 50;
+    const multiplier = xPosition > 0 ? -1 : 1;
+    const velocityVector = new Vector2d(
+      randomFloat(3, 5),
+      randomFloat(-2, 2)
+    ).mult(multiplier);
+
+    const ufo = new Saucer({
+      position: [xPosition, randomInt(yMin, yMax)],
+      context: this.context,
+      velocity: velocityVector,
+    });
+
+    const ufoCollider = new Collider({
+      size: ufo.size,
+      visible: true,
+      context: this.context,
+    });
+    ufo.setCollider(ufoCollider);
+    this.ufo = ufo;
   }
   respawn() {
     setTimeout(() => {
       this.spawnShip();
     }, 1500);
+  }
+  setupUIComponents() {
+    const startGameLabel = new UILabel({
+      position: [310, 600],
+      value: 'press ENTER to start',
+      context: this.context,
+      visible: false,
+    });
+    const scoreLabel = new UILabel({
+      value: this.currentScore,
+      position: [50, 40],
+      context: this.context,
+      visible: false,
+    });
+    const pausedGameLabel = new UILabel({
+      value: 'Paused',
+      position: [WIDTH / 2 - 50, HEIGHT / 2 - 12],
+      context: this.context,
+      visible: false,
+    });
+    const highestScoreLabel = new UILabel({
+      value: '0',
+      position: [WIDTH / 2, 48],
+      size: 'small',
+      context: this.context,
+      visible: false,
+    });
+    const loadingLabel = new UILabel({
+      value: 'Loading',
+      position: [WIDTH / 2 - 50, HEIGHT / 2 - 12],
+      context: this.context,
+      visible: false,
+    });
+
+    this.uiCollection.add('startGameLabel', startGameLabel);
+    this.uiCollection.add('scoreLabel', scoreLabel);
+    this.uiCollection.add('pausedGameLabel', pausedGameLabel);
+    this.uiCollection.add('highestScoreLabel', highestScoreLabel);
+    this.uiCollection.add('loadingLabel', loadingLabel);
   }
   endGame() {
     setTimeout(() => {
@@ -334,12 +405,28 @@ export default class Game {
     }, 2500);
   }
   update() {
-    this.startGameLabel.render();
-    this.scoreLabel.render();
-    this.pausedGameLabel.render();
-    this.highestScore.render();
-    const ship = this.ship;
-    const context = this.context;
+    const {ufo, ship, context} = this;
+
+    if (!this.paused) {
+      this.timer++;
+    }
+
+    this.uiCollection.render();
+
+    if (ufo) {
+      ufo.render();
+      const [sauserX, sauserY] = ufo.getPosition();
+      const [newSauserX, newSauserY] = keepInScreenRange(
+        sauserX,
+        sauserY,
+        WIDTH,
+        HEIGHT,
+        16
+      );
+
+      ufo.setPosition(sauserX, newSauserY);
+    }
+
     this.drawLiveIcons();
     if (ship) {
       ship.render(null, !this.paused);
@@ -391,7 +478,7 @@ export default class Game {
         });
       });
     }
-    this.asteroids.forEach((asteroid) => {
+    this.asteroids.forEach((asteroid, asteroidIdx) => {
       if (ship) {
         if (ship.getCollider().collides(asteroid.getCollider())) {
           this.ship = null;
@@ -406,7 +493,37 @@ export default class Game {
           if (this.lives > 0) {
             this.respawn();
           } else {
-            this.endGame();
+            // this.endGame();
+            this.observervable.notify(Game.states.GAME_OVER);
+          }
+        }
+      }
+
+      if (ufo) {
+        if (ufo.getCollider().collides(asteroid.getCollider())) {
+          this.ufo = null;
+          this.asteroids.splice(asteroidIdx, 1);
+
+          this.explosions.push(
+            new Explosion({
+              position: ufo.getPosition(),
+            })
+          );
+
+          const {type} = asteroid;
+          const newType = asteroid.type === 'big' ? 'medium' : 'small';
+
+          if (type !== 'small') {
+            this.asteroids.push(
+              this.createAsteroid({
+                type: newType,
+                position: asteroid.getPosition(),
+              }),
+              this.createAsteroid({
+                type: newType,
+                position: asteroid.getPosition(),
+              })
+            );
           }
         }
       }
@@ -421,14 +538,35 @@ export default class Game {
       explosion.render(context);
     });
   }
+  preload() {
+    fetch('/api/projects/asteroids/highest-score', {
+      method: 'get',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+      .then((response) => {
+        response.json().then((data) => {
+          this.setHighestScore(data.score.toString());
+          this.observervable.notify(Game.states.MAIN_MENU);
+        });
+      })
+      .catch((error) => {
+        this.observervable.notify(Game.states.MAIN_MENU);
+      });
+  }
 }
 
 Game.states = {
+  INITIAL_LOADING: 'initialLoading',
   MAIN_MENU: 'mainMenu',
   PAUSED: 'paused',
   GAME_STARTED: 'gameStarted',
   GAME_RESUMED: 'gameResumed',
+  GAME_OVER: 'gameOver',
 };
 Game.defaults = {
-  state: Game.states.MAIN_MENU,
+  state: Game.states.INITIAL_LOADING,
+  lives: 1,
 };

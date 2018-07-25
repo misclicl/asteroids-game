@@ -1,6 +1,7 @@
 export default class Observable {
   constructor() {
     this.observers = [];
+    this.onNotify = null;
   }
   subscribe(f) {
     this.observers.push(f);
@@ -10,5 +11,8 @@ export default class Observable {
   }
   notify(data) {
     this.observers.forEach((observer) => observer(data));
+    if (this.onNotify) {
+      this.onNotify(data);
+    }
   }
 };

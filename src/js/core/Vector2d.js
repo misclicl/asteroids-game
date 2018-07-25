@@ -34,4 +34,10 @@ export default class Vector2d {
     );
     return new Vector2d(newX, newY);
   }
+  addVector(vector) {
+    return new Vector2d(
+      this.x + vector.x,
+      this.y + vector.y,
+    );
+  }
 }

@@ -1,14 +1,14 @@
-import {plotLine} from './core/plotLine';
-import Vector2d from './core/Vector2d';
-import GameObject from './core/GameObject';
+import {plotLine} from '../core/plotLine.js';
+import Vector2d from '../core/Vector2d.js';
+import GameObject from '../core/GameObject.js';
 import {
   randomFloat,
   randomInt,
   drawGlowing,
   randomElementFromArray,
-} from './core/utils';
-import Explosion from './Explosion';
-import asteroids from './resources/asteroids.json';
+} from '../core/utils.js';
+import Explosion from './Explosion.js';
+import asteroids from '../resources/asteroids.json';
 
 const {round} = Math;
 
@@ -25,23 +25,20 @@ const newShapes = asteroids.shapes.map((set) => {
   };
 });
 
-const sizesToType = {
-  big: 60,
-  medium: 25,
-  small: 16,
-};
-
 export default class Asteroid extends GameObject {
   constructor(args) {
     const params = Object.assign({}, Asteroid.defaults, args);
 
     super(params);
     this.type = params.type;
-    this.size = sizesToType[this.type];
+    this.size = Asteroid.types[this.type].size;
     this.vertices = this.generateShape();
     this.destroyed = false;
 
-    const {minSpeed, maxSpeed} = params;
+    const velocityMultiplier = Asteroid.types[this.type].velocityMultiplier;
+
+    const minSpeed = params.minSpeed * velocityMultiplier;
+    const maxSpeed = params.maxSpeed * velocityMultiplier;
 
     this.velocity = new Vector2d(
       [randomFloat(minSpeed, maxSpeed), randomFloat(-minSpeed, -maxSpeed)][
@@ -51,6 +48,11 @@ export default class Asteroid extends GameObject {
         randomInt(0, 1)
       ]
     );
+  }
+  defaults = {
+    minSpeed: 0.7,
+    maxSpeed: 2,
+    type: 'big',
   }
   update() {
     const [x, y] = this.position.add(this.velocity).getPosition();
@@ -96,6 +98,21 @@ export default class Asteroid extends GameObject {
     }
   }
 }
+
+Asteroid.types = {
+  small: {
+    velocityMultiplier: 2.5,
+    size: 16,
+  },
+  medium: {
+    velocityMultiplier: 1.7,
+    size: 25,
+  },
+  big: {
+    velocityMultiplier: 1,
+    size: 60,
+  },
+};
 
 Asteroid.defaults = {
   minSpeed: 0.7,
