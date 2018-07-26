@@ -31,7 +31,7 @@ class Saucer extends GameObject {
     this.timer = 0;
     this.shotSound = new Sound({
       src: 'shot_saucer.wav',
-      volume: .2,
+      volume: 0.2,
     });
 
     // setInterval(() => {
@@ -73,7 +73,6 @@ class Saucer extends GameObject {
     this.setPosition(...this.position.add(this.velocity).getPosition());
   }
   shoot() {
-    console.log('shot');
     if (this.projectiles.length <= 3) {
       this.shotSound.play();
 
@@ -104,7 +103,7 @@ class Saucer extends GameObject {
         if (idx >= 0) {
           this.projectiles.splice(idx, 1);
         }
-      }, 1000);
+      }, 3000);
     }
   }
   reset() {
@@ -142,17 +141,11 @@ class Saucer extends GameObject {
     }
 
     this.projectiles.forEach((projectile) => {
-      projectile.update();
-      projectile.render();
+      // projectile.update();
+      projectile.render({update});
     });
 
-    drawGlowing(
-      saucerShape,
-      contextToUse,
-      [offsetX, offsetY],
-      0,
-      false,
-    );
+    drawGlowing(saucerShape, contextToUse, [offsetX, offsetY], 0, false);
 
     saucerShape.forEach((line) => {
       plotLine(

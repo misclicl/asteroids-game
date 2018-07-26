@@ -19,8 +19,27 @@ canvas {
   image-rendering: -o-crisp-edges;
   image-rendering: crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
-  border: 1px solid rgb(224, 255, 255);
+  border: 1px solid #9ea5a1;
   box-shadow: 0px 0px 10px 3px rgba(146, 213, 228, 0.23);
+}
+
+.scoreboard-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* background-color: #afb8b3; */
+  box-shadow: none;
+}
+
+canvas.scoreboard {
+  position: absolute;
+  border: none;
+  box-shadow: none;
 }
 
 #main-container {
@@ -35,8 +54,7 @@ canvas {
   font-size: 24px;
   color: rgb(224, 255, 255);
   text-shadow: -0.05em 0 0 rgba(255, 0, 0, 0.6),
-    0.05em 0 0 rgba(0, 255, 255, 0.6),
-    -1px 0px 10px rgb(146, 213, 228);
+    0.05em 0 0 rgba(0, 255, 255, 0.6), -1px 0px 10px rgb(146, 213, 228);
 }
 
 @font-face {

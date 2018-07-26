@@ -15,7 +15,7 @@ container.appendChild(canvas);
 const game = new Game({context});
 game.preload();
 
-let fps = 29;
+let fps = 30;
 let now;
 let then = Date.now();
 let interval = 1000 / fps;

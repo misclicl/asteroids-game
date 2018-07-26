@@ -1,4 +1,4 @@
-const {sin, cos, round} = Math;
+const {sin, cos, round, sqrt} = Math;
 
 export default class Vector2d {
   constructor(x, y) {
@@ -14,11 +14,17 @@ export default class Vector2d {
   add(vector) {
     return new Vector2d(this.x + vector.x, this.y + vector.y);
   }
+  addScalar(value) {
+    return new Vector2d(this.x + value, this.y + value);
+  }
   mult(value) {
     return new Vector2d(this.x * value, this.y * value);
   }
   min(value) {
     return new Vector2d(Math.min(this.x, value), Math.min(this.y, value));
+  }
+  getLength() {
+    return sqrt(this.x ** 2 + this.y ** 2);
   }
   isNull() {
     return this.x == 0 && this.y == 0;

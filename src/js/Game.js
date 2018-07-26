@@ -8,11 +8,12 @@ import Vector2d from './core/Vector2d';
 import Saucer from './Entities/Saucer';
 
 import {plotLine} from './core/plotLine';
-import {drawGlowing, randomInt, randomFloat, reverseString} from './core/utils';
+import {drawGlowing, randomInt} from './core/utils';
 import Observervable from './core/Observable';
 import UILabel from './core/UILabel';
 
 import {WIDTH, HEIGHT, FPS, GAME_START_TIMEOUT} from './constants';
+import Scoreboard from './Scoreboard';
 
 const shipShape = [
   new Vector2d(0, -9),
@@ -54,6 +55,7 @@ export default class Game {
     this._ship = null;
     this.lives = Game.defaults.lives;
     this.context = args.context;
+    this.scoreboard = new Scoreboard();
 
     this.paused = false;
     this.explosions = [];
@@ -78,7 +80,6 @@ export default class Game {
           this.ship.rotateRight();
         }
         if (shipController.acceleration) {
-          console.log(shipController.acceleration);
           this.ship.accelerate();
         } else {
           this.ship.stop();
@@ -151,20 +152,19 @@ export default class Game {
     gameObservervable.subscribe(this.updateState.bind(this));
     gameObservervable.subscribe(this.updateEntities.bind(this));
     gameObservervable.onNotify = (data) => {
-      console.log(data);
       this.state = data;
     };
     gameObservervable.notify(Game.states.INITIAL_LOADING);
     this.observervable = gameObservervable;
 
     this.createShip();
-    this.spawnSaucer();
+    // this.spawnSaucer();
   }
   drawLiveIcons() {
     if (
       this.ship ||
       this.state === 'gameStarted' ||
-      this .state === 'gameResumed'
+      this.state === 'gameResumed'
     ) {
       const {context} = this;
       context.save();
@@ -255,7 +255,9 @@ export default class Game {
       this.uiCollection.getComponent('startGameLabel').show();
       this.uiCollection.getComponent('highestScoreLabel').show();
       this.uiCollection.getComponent('scoreLabel').show();
+      this.scoreboard.show();
     } else if (state === Game.states.GAME_STARTED) {
+      this.scoreboard.hide();
       this.uiCollection.getComponent('startGameLabel').hide();
     } else if (state === Game.states.PAUSED) {
       this.uiCollection.getComponent('pausedGameLabel').show();
@@ -274,7 +276,7 @@ export default class Game {
       this.ufo = null;
       setTimeout(() => {
         this.spawnShip();
-        this.spawnSaucer();
+        // this.spawnSaucer();
         this.launchStage(this.stage);
       }, GAME_START_TIMEOUT);
     } else if (state === Game.states.PAUSED) {
@@ -288,7 +290,7 @@ export default class Game {
     const newScore = Math.floor(value / 1e4);
 
     if (prevScore !== newScore) {
-      this.lives ++;
+      this.lives++;
     }
 
     this.currentScore = value;
@@ -321,11 +323,14 @@ export default class Game {
     this.explosions = [];
   }
   createAsteroid(args = {}) {
+    const position =
+      args.position ||
+      Vector2d.randomUnitVector(HEIGHT / 2)
+        .add(this._ship.position)
+        .getPosition();
+
     const asteroid = new Asteroid({
-      position: args.position || [
-        Math.random() * WIDTH,
-        Math.random() * HEIGHT,
-      ],
+      position,
       type: args.type || 'big',
     });
     const asteroidCollider = new Collider({
@@ -348,39 +353,45 @@ export default class Game {
     this.ship = this._ship;
   }
   spawnSaucer(x, y) {
-    const yMin = HEIGHT * 0.2;
-    const yMax = HEIGHT * 0.8;
-    const xPosition = Math.random() > 0.5 ? -50 : WIDTH + 50;
-    const multiplier = xPosition > 0 ? -1 : 1;
-    const velocityVector = new Vector2d(
-      randomFloat(3, 4),
-      randomFloat(-1, 1.5)
-    ).mult(multiplier);
+    if (!this.ufo) {
+      const yMin = HEIGHT * 0.2;
+      const yMax = HEIGHT * 0.8;
+      const xPosition = Math.random() > 0.5 ? -50 : WIDTH + 50;
+      const multiplier = xPosition > 0 ? -1 : 1;
+      const velocityVector = new Vector2d(0, 0);
+      // const velocityVector = new Vector2d(
+      //   randomFloat(3, 4),
+      //   randomFloat(-1, 1.5)
+      // ).mult(multiplier);
 
-    const ufo = new Saucer({
-      position: [xPosition, randomInt(yMin, yMax)],
-      context: this.context,
-      velocity: velocityVector,
-    });
+      const ufo = new Saucer({
+        position: [300, 300],
+        // position: [xPosition, randomInt(yMin, yMax)],
+        context: this.context,
+        velocity: velocityVector,
+      });
 
-    const ufoCollider = new Collider({
-      size: ufo.size,
-      visible: true,
-      context: this.context,
-    });
-    ufo.setCollider(ufoCollider);
-    this.ufo = ufo;
+      const ufoCollider = new Collider({
+        size: ufo.size,
+        visible: true,
+        context: this.context,
+      });
+      ufo.setCollider(ufoCollider);
+      this.ufo = ufo;
 
-    const shootingLoop = () => {
-      if (this.ufo) {
-        this.ufo.shoot();
-        setTimeout(() => {
-          shootingLoop();
-        }, randomInt(900, 1500));
-      }
-    };
+      const shootingLoop = () => {
+        if (this.ufo) {
+          if (!this.paused) {
+            this.ufo.shoot();
+          }
+          setTimeout(() => {
+            shootingLoop();
+          }, randomInt(900, 1500));
+        }
+      };
 
-    shootingLoop();
+      shootingLoop();
+    }
   }
   respawn() {
     setTimeout(() => {
@@ -389,14 +400,14 @@ export default class Game {
   }
   setupUIComponents() {
     const startGameLabel = new UILabel({
-      position: [310, 600],
+      position: [280, 660],
       value: 'press ENTER to start',
       context: this.context,
       visible: false,
     });
     const scoreLabel = new UILabel({
       value: this.currentScore,
-      position: [50, 40],
+      position: [50, 24],
       context: this.context,
       visible: false,
     });
@@ -414,14 +425,14 @@ export default class Game {
     });
     const highestScoreLabel = new UILabel({
       value: '0',
-      position: [WIDTH / 2, 48],
+      position: [WIDTH / 2 - 32, 32],
       size: 'small',
       context: this.context,
       visible: false,
     });
     const loadingLabel = new UILabel({
       value: 'Loading',
-      position: [WIDTH / 2 - 50, HEIGHT / 2 - 12],
+      position: [WIDTH / 2 - 70, HEIGHT / 2 - 20],
       context: this.context,
       visible: false,
     });
@@ -444,6 +455,7 @@ export default class Game {
     }, 4000);
   }
   update() {
+    this.scoreboard.render();
     const {ufo, ship, context} = this;
 
     if (!this.paused) {
@@ -451,14 +463,17 @@ export default class Game {
       this.stageTimer++;
     }
 
-    if (this.stageTimer % (FPS * 15) === 0) {
+    if (
+      this.stageTimer % (FPS * 15) === 0 &&
+      this.state !== GAME.states.MAIN_MENU
+    ) {
       this.spawnSaucer();
     }
 
     this.uiCollection.render(null, !this.paused);
 
     if (ufo) {
-      ufo.render();
+      ufo.render(null, !this.paused);
 
       const [saucerX, saucerY] = ufo.getPosition();
       const [newSaucerX, newSaucerY] = keepInScreenRange(
@@ -550,7 +565,6 @@ export default class Game {
           if (this.lives > 0) {
             this.respawn();
           } else {
-            // this.endGame();
             this.observervable.notify(Game.states.GAME_OVER);
           }
         }
@@ -604,12 +618,16 @@ export default class Game {
       },
     })
       .then((response) => {
-        response.json().then((data) => {
-          this.setHighestScore(data.score.toString());
-          this.observervable.notify(Game.states.MAIN_MENU);
-        }).catch((error) => {
-          this.observervable.notify(Game.states.MAIN_MENU);
-        });
+        response
+          .json()
+          .then((data) => {
+            this.setHighestScore(data[0].score.toString());
+            this.scoreboard.setScores(data);
+            this.observervable.notify(Game.states.MAIN_MENU);
+          })
+          .finally(() => {
+            this.observervable.notify(Game.states.MAIN_MENU);
+          });
       })
       .catch((error) => {
         this.observervable.notify(Game.states.MAIN_MENU);

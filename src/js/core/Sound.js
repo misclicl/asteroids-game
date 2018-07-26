@@ -16,7 +16,6 @@ class Sound {
       audio.volume = this.volume;
       this.streams.push(audio);
     }
-    console.log(this.src);
   }
   play() {
     this.currentStream = (this.currentStream + 1) % this.maxStreams;

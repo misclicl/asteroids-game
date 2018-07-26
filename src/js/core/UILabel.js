@@ -34,7 +34,7 @@ export default class UILabel extends GameObject {
       this.size === UILabel.sizes.SMALL
         ? lettersSmallShape
         : lettersRegularShape;
-    this.letterSpacing = this.size === UILabel.sizes.REGULAR ? 20 : 10;
+    this.letterSpacing = this.size === UILabel.sizes.REGULAR ? 24 : 12;
     if (params.context) {
       this.attachToContext(params.context);
     }

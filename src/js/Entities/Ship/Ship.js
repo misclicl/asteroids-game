@@ -32,7 +32,7 @@ class Ship extends GameObject {
 
     this.shotSound = new Sound({
       src: 'shot_ship.wav',
-      volume: .5,
+      volume: 0.5,
     });
   }
   setPosition(x, y) {
@@ -64,7 +64,7 @@ class Ship extends GameObject {
         this._displayedShape.leftTail,
         this._displayedShape.rightTail,
       ]);
-    };
+    }
   }
   attachToContext(context) {
     this.context = context;
@@ -128,7 +128,9 @@ class Ship extends GameObject {
 
       const projectile = new Projectile({
         position: projectileVector.getPosition(),
-        velocity: new Vector2d(sin(rotation), -cos(rotation)),
+        velocity: new Vector2d(sin(rotation), -cos(rotation)).mult(
+          1 + this.velocity.getLength() * 0.03
+        ),
       });
 
       const projectileCollider = new Collider({
@@ -190,8 +192,6 @@ class Ship extends GameObject {
       this.projectiles.forEach((projectile) => {
         projectile.render({update});
       });
-
-      // this.collider.render();
 
       const {
         nose,

@@ -3,7 +3,6 @@ import Vector2d from '../core/Vector2d.js';
 import GameObject from '../core/GameObject.js';
 import {
   randomFloat,
-  randomInt,
   drawGlowing,
   randomElementFromArray,
 } from '../core/utils.js';
@@ -40,14 +39,7 @@ export default class Asteroid extends GameObject {
     const minSpeed = params.minSpeed * velocityMultiplier;
     const maxSpeed = params.maxSpeed * velocityMultiplier;
 
-    this.velocity = new Vector2d(
-      [randomFloat(minSpeed, maxSpeed), randomFloat(-minSpeed, -maxSpeed)][
-        randomInt(0, 1)
-      ],
-      [randomFloat(minSpeed, maxSpeed), randomFloat(-minSpeed, -maxSpeed)][
-        randomInt(0, 1)
-      ]
-    );
+    this.velocity = Vector2d.randomUnitVector(randomFloat(minSpeed, maxSpeed));
   }
   defaults = {
     minSpeed: 0.7,
@@ -101,15 +93,15 @@ export default class Asteroid extends GameObject {
 
 Asteroid.types = {
   small: {
-    velocityMultiplier: 2.5,
+    velocityMultiplier: 4,
     size: 16,
   },
   medium: {
-    velocityMultiplier: 1.7,
+    velocityMultiplier: 2.7,
     size: 25,
   },
   big: {
-    velocityMultiplier: 1,
+    velocityMultiplier: 1.9,
     size: 60,
   },
 };
