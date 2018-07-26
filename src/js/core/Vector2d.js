@@ -40,4 +40,8 @@ export default class Vector2d {
       this.y + vector.y,
     );
   }
+  static randomUnitVector(length = 1) {
+    const angle = Math.random() * Math.PI * 2;
+    return new Vector2d(length * Math.cos(angle), length * Math.sin(angle));
+  }
 }

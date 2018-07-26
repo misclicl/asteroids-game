@@ -31,7 +31,7 @@ class Ship extends GameObject {
     });
 
     this.shotSound = new Sound({
-      src: 'pew_1.wav',
+      src: 'shot_ship.wav',
       volume: .5,
     });
   }

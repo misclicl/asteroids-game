@@ -5,9 +5,9 @@ import {randomFloat} from '../core/utils';
 export default class Particle extends GameObject {
   constructor(args) {
     super(args);
-    this.speed = 2.8;
+    this.speed = 2;
 
-    this.velocity = new Vector2d(randomFloat(-1, 1), randomFloat(-1, 1)).mult(
+    this.velocity = Vector2d.randomUnitVector(randomFloat(.5, 2)).mult(
       this.speed
     );
   }

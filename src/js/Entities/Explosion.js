@@ -6,13 +6,13 @@ export default class Explosion extends GameObject {
   constructor(args) {
     super(args);
     this.particles = [];
-    for (let index = 0; index < randomInt(12, 15); index++) {
+    for (let index = 0; index < randomInt(15, 20); index++) {
       this.particles.push(new Particle({
         position: this.getPosition(),
       }));
     }
     this.timer = 0;
-    const audio = new Audio(`explosion${randomInt(2, 3)}.wav`);
+    const audio = new Audio(`explosion_1.wav`);
     audio.volume = .3;
     audio.play();
   }

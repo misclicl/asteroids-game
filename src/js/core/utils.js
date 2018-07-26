@@ -13,6 +13,12 @@ export const degrees = (radians) => {
   return radians * 180 / Math.PI;
 };
 
+export const reverseString = (string) =>
+  string
+    .split('')
+    .reverse()
+    .join('');
+
 export const uid = (() => {
   let _id = 0;
   return (prefix) => (prefix || '') + _id++;

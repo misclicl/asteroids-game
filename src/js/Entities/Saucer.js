@@ -5,10 +5,11 @@ import {radians, drawGlowing, randomFloat} from '../core/utils.js';
 import {plotLine} from '../core/plotLine.js';
 import Collider from '../core/Collider.js';
 import {shape} from '../resources/ufo.json';
+import Sound from '../core/Sound.js';
 
 const {sin, cos} = Math;
 
-const sauserShape = shape.map((line) => {
+const saucerShape = shape.map((line) => {
   return [
     new Vector2d(line[0][0], line[0][1]),
     new Vector2d(line[1][0], line[1][1]),
@@ -28,6 +29,14 @@ class Saucer extends GameObject {
     this.projectileCounter = 0;
     this.state = true;
     this.timer = 0;
+    this.shotSound = new Sound({
+      src: 'shot_saucer.wav',
+      volume: .2,
+    });
+
+    // setInterval(() => {
+    //   this.shoot();
+    // }, 1000);
   }
   setPosition(x, y) {
     this.position = new Vector2d(x, y);
@@ -39,8 +48,6 @@ class Saucer extends GameObject {
   }
   setRotation(value) {
     this._rotation = radians(value);
-
-    // const shape = Object.assign({}, this._shape);
 
     for (let point in shape) {
       if (shape.hasOwnProperty(point)) {
@@ -66,21 +73,15 @@ class Saucer extends GameObject {
     this.setPosition(...this.position.add(this.velocity).getPosition());
   }
   shoot() {
+    console.log('shot');
     if (this.projectiles.length <= 3) {
-      const audio = new Audio('shot.wav');
-      audio.play();
+      this.shotSound.play();
 
-      const rotation = this.getRotation();
-      const projectilePosition = new Vector2d(
-        sin(rotation),
-        -cos(rotation)
-      ).mult(this.size / 2);
-
-      const projectileVector = this.position.add(projectilePosition);
+      const projectileVector = this.position;
 
       const projectile = new Projectile({
         position: projectileVector.getPosition(),
-        velocity: new Vector2d(sin(rotation), -cos(rotation)),
+        velocity: Vector2d.randomUnitVector(),
       });
 
       const projectileCollider = new Collider({
@@ -140,15 +141,20 @@ class Saucer extends GameObject {
       this.collider.render();
     }
 
+    this.projectiles.forEach((projectile) => {
+      projectile.update();
+      projectile.render();
+    });
+
     drawGlowing(
-      sauserShape,
+      saucerShape,
       contextToUse,
       [offsetX, offsetY],
       0,
       false,
     );
 
-    sauserShape.forEach((line) => {
+    saucerShape.forEach((line) => {
       plotLine(
         line[0].addVector(offsetVector),
         line[1].addVector(offsetVector),
