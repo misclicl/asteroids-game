@@ -38,17 +38,13 @@ export default class Scoreboard {
     this.labels = [];
     this.labels.push(
       new UILabel({
-        position: [400, 80],
-        value: 'Highscores',
+        position: [389, 80],
+        value: 'High scores',
         context: this.context,
         visible: true,
       })
     );
     this.leaders = [];
-  }
-  setVisibility(value) {
-    this._visibility = value;
-    this.canvas.style.display = value;
   }
   setScores(scores) {
     let yStep = 0;
@@ -56,10 +52,8 @@ export default class Scoreboard {
     scores.forEach((record, index) => {
       this.leaders.push(
         new UILabel({
-          position: [330, 180 + yStep],
-          value: `${index + 1}. ${
-            index < 9 ? ' ' + record.name : record.name
-          } ${record.score}`,
+          position: [index < 9 ? 330 : 305, 180 + yStep],
+          value: `${index + 1}. ${record.name} ${record.score}`,
           context: this.context,
           visible: true,
         })
@@ -73,19 +67,26 @@ export default class Scoreboard {
   show() {
     this.setVisibility(true);
   }
+  setVisibility(value) {
+    if (!value) {
+      this.clearCanvas();
+    }
+    this._visibility = value;
+    this.canvas.style.display = value;
+  }
   visibility() {
     return this._visibility;
   }
-  render() {
+  clearCanvas() {
     const {context} = this;
     const {width, height} = Scoreboard.defaults;
     context.clearRect(0, 0, width, height);
     context.fillStyle = 'transparent';
     context.fillRect(0, 0, width, height);
+  }
+  render() {
     if (this.visibility()) {
-      context.clearRect(0, 0, width, height);
-      context.fillStyle = 'transparent';
-      context.fillRect(0, 0, width, height);
+      this.clearCanvas();
 
       this.labels.forEach((label) => {
         label.render();

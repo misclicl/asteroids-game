@@ -14,6 +14,7 @@ import UILabel from './core/UILabel';
 
 import {WIDTH, HEIGHT, FPS, GAME_START_TIMEOUT} from './constants';
 import Scoreboard from './Scoreboard';
+import ScoreInput from './ScoreInput';
 
 const shipShape = [
   new Vector2d(0, -9),
@@ -56,6 +57,7 @@ export default class Game {
     this.lives = Game.defaults.lives;
     this.context = args.context;
     this.scoreboard = new Scoreboard();
+    this.scoreInput = new ScoreInput();
 
     this.paused = false;
     this.explosions = [];
@@ -133,6 +135,29 @@ export default class Game {
           }
         },
       },
+      [Game.states.SUBMIT_HIGHSCORE]: {
+        keydown: ({key}) => {
+          if (key === 'ArrowUp') {
+            this.scoreInput.prevSymbol();
+          }
+          if (key === 'ArrowDown') {
+            this.scoreInput.nextSymbol();
+          }
+          if (key === 'ArrowRight') {
+            this.scoreInput.nextPosition();
+          }
+          if (key === 'ArrowLeft') {
+            this.scoreInput.prevPosition();
+          }
+          if (key === 'Enter') {
+            this.scoreInput.submitScores().finally(() => {
+              setTimeout(() => {
+                this.observervable.notify(Game.states.MAIN_MENU);
+              });
+            });
+          }
+        },
+      },
       [Game.states.PAUSED]: {
         keypress: ({key, keyCode}) => {
           if (keyCode == 27 || key === ' ') {
@@ -183,29 +208,25 @@ export default class Game {
   setHighestScore(value) {
     this.uiCollection.getComponent('highestScoreLabel').setValue(value);
   }
-  sendScore(name, score) {
-    fetch('/api/projects/asteroids/setScore', {
-      method: 'post',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name,
-        score,
-      }),
-    }).then((response) => {
-      // console.log(response);
-    });
-  }
   updateState(state) {
     if (state === Game.states.GAME_OVER) {
       this.ship = null;
       this.stage = 1;
-      setTimeout(() => {
-        this.lives = 4;
-        this.observervable.notify(Game.states.MAIN_MENU);
-      }, 2000);
+      if (
+        this.scores &&
+        !!this.currentScore &&
+        (this.currentScore > this.scores[this.scores.length - 1].score ||
+          this.scores.length < 10)
+      ) {
+        setTimeout(() => {
+          this.observervable.notify(Game.states.SUBMIT_HIGHSCORE);
+        }, 2000);
+      } else {
+        setTimeout(() => {
+          this.lives = 4;
+          this.observervable.notify(Game.states.MAIN_MENU);
+        }, 2000);
+      }
     }
   }
   updateControlScheme(state) {
@@ -243,6 +264,12 @@ export default class Game {
           document.addEventListener(key, currentHandlers[key]);
         }
       }
+    } else if (state === Game.states.SUBMIT_HIGHSCORE) {
+      for (const key in currentHandlers) {
+        if (currentHandlers.hasOwnProperty(key)) {
+          document.addEventListener(key, currentHandlers[key]);
+        }
+      }
     }
   }
   updateUI(state) {
@@ -256,6 +283,7 @@ export default class Game {
       this.uiCollection.getComponent('highestScoreLabel').show();
       this.uiCollection.getComponent('scoreLabel').show();
       this.scoreboard.show();
+      this.scoreInput.hide();
     } else if (state === Game.states.GAME_STARTED) {
       this.scoreboard.hide();
       this.uiCollection.getComponent('startGameLabel').hide();
@@ -265,24 +293,30 @@ export default class Game {
       this.uiCollection.getComponent('pausedGameLabel').hide();
     } else if (state === Game.states.GAME_OVER) {
       this.uiCollection.getComponent('gameOverLabel').show();
+    } else if (state === Game.states.SUBMIT_HIGHSCORE) {
+      this.uiCollection.getComponent('gameOverLabel').hide();
+      this.scoreInput.show(this.currentScore);
     }
   }
   updateEntities(state) {
     if (state === Game.states.MAIN_MENU) {
       this.asteroids = [];
-      this.spawnAsteroids(5);
+      this.spawnAsteroids(3);
     } else if (state === Game.states.GAME_STARTED) {
       this.asteroids = [];
       this.ufo = null;
       setTimeout(() => {
         this.spawnShip();
-        // this.spawnSaucer();
         this.launchStage(this.stage);
       }, GAME_START_TIMEOUT);
     } else if (state === Game.states.PAUSED) {
       this.paused = true;
     } else if (state === Game.states.GAME_RESUMED) {
       this.paused = false;
+    } else if (state === Game.states.SUBMIT_HIGHSCORE) {
+      this.asteroids = [];
+      this.ufo = null;
+      this.ship = null;
     }
   }
   setScore(value) {
@@ -444,18 +478,9 @@ export default class Game {
     this.uiCollection.add('gameOverLabel', gameOverLabel);
     this.uiCollection.add('loadingLabel', loadingLabel);
   }
-  endGame() {
-    setTimeout(() => {
-      this.observervable.notify(Game.states.MAIN_MENU);
-      this.asteroids = [];
-      this.explosions = [];
-      this.ship = null;
-      this.setScore(0);
-      this.spawnAsteroids(6);
-    }, 4000);
-  }
   update() {
     this.scoreboard.render();
+    this.scoreInput.render();
     const {ufo, ship, context} = this;
 
     if (!this.paused) {
@@ -465,7 +490,8 @@ export default class Game {
 
     if (
       this.stageTimer % (FPS * 15) === 0 &&
-      this.state !== GAME.states.MAIN_MENU
+      (this.state == Game.states.GAME_STARTED ||
+        this.state == Game.states.GAME_RESUMED)
     ) {
       this.spawnSaucer();
     }
@@ -622,6 +648,7 @@ export default class Game {
           .json()
           .then((data) => {
             this.setHighestScore(data[0].score.toString());
+            this.scores = data;
             this.scoreboard.setScores(data);
             this.observervable.notify(Game.states.MAIN_MENU);
           })
@@ -639,6 +666,7 @@ Game.states = {
   INITIAL_LOADING: 'initialLoading',
   MAIN_MENU: 'mainMenu',
   PAUSED: 'paused',
+  SUBMIT_HIGHSCORE: 'submitHighscore',
   GAME_STARTED: 'gameStarted',
   GAME_RESUMED: 'gameResumed',
   GAME_OVER: 'gameOver',
