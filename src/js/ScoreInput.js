@@ -202,6 +202,6 @@ export default class ScoreInput {
   static defaults = {
     width: WIDTH,
     height: HEIGHT,
-    visibility: true,
+    visibility: false,
   };
 }

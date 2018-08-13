@@ -134,7 +134,7 @@ class Ship extends GameObject {
       });
 
       const projectileCollider = new Collider({
-        size: 3,
+        size: 4,
       });
       projectile.attachToContext(this.context);
       projectileCollider.attachToContext(this.context);

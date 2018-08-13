@@ -89,8 +89,8 @@ export default class Game {
       },
       reset: () => {
         setTimeout(() => {
-          this.rotation = 0;
-          this.acceleration = 0;
+          shipController.rotation = 0;
+          shipController.acceleration = 0;
         }, 1000);
       },
     };
@@ -183,7 +183,6 @@ export default class Game {
     this.observervable = gameObservervable;
 
     this.createShip();
-    // this.spawnSaucer();
   }
   drawLiveIcons() {
     if (
@@ -313,6 +312,8 @@ export default class Game {
       this.paused = true;
     } else if (state === Game.states.GAME_RESUMED) {
       this.paused = false;
+    } else if (state === Game.states.GAME_OVER) {
+
     } else if (state === Game.states.SUBMIT_HIGHSCORE) {
       this.asteroids = [];
       this.ufo = null;
@@ -406,7 +407,7 @@ export default class Game {
       });
 
       const ufoCollider = new Collider({
-        size: ufo.size,
+        size: ufo.size + 4,
         visible: true,
         context: this.context,
       });
@@ -493,6 +494,7 @@ export default class Game {
       (this.state == Game.states.GAME_STARTED ||
         this.state == Game.states.GAME_RESUMED)
     ) {
+      console.log(this.stageTimer);
       this.spawnSaucer();
     }
 

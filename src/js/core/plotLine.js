@@ -2,7 +2,7 @@ const {round} = Math;
 
 const setPixel = (x, y, context) => {
   context.fillRect(x, y, 1, 1);
-  context.fillStyle = 'rgba(255,255,255, 0.7)';
+  context.fillStyle = 'rgba(255,255,255, 0.5)';
 };
 
 export const plotLine = (from, to, context) => {

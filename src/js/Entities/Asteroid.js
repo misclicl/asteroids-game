@@ -101,7 +101,7 @@ Asteroid.types = {
     size: 25,
   },
   big: {
-    velocityMultiplier: 1.9,
+    velocityMultiplier: 2.2,
     size: 60,
   },
 };
