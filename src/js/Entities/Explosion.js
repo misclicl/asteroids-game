@@ -12,8 +12,8 @@ export default class Explosion extends GameObject {
       }));
     }
     this.timer = 0;
-    const audio = new Audio(`explosion_1.wav`);
-    audio.volume = .3;
+    const audio = new Audio('/sounds/explosion_1.wav');
+    audio.volume = .6;
     audio.play();
   }
   render(context) {

@@ -31,8 +31,8 @@ class Ship extends GameObject {
     });
 
     this.shotSound = new Sound({
-      src: 'shot_ship.wav',
-      volume: 0.5,
+      src: '/sounds/shot_ship.wav',
+      volume: 1,
     });
   }
   setPosition(x, y) {

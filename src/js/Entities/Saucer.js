@@ -30,13 +30,9 @@ class Saucer extends GameObject {
     this.state = true;
     this.timer = 0;
     this.shotSound = new Sound({
-      src: 'shot_saucer.wav',
-      volume: 0.2,
+      src: '/sounds/shot_saucer.wav',
+      volume: 0.5,
     });
-
-    // setInterval(() => {
-    //   this.shoot();
-    // }, 1000);
   }
   setPosition(x, y) {
     this.position = new Vector2d(x, y);

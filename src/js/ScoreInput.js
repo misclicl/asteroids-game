@@ -93,10 +93,6 @@ export default class ScoreInput {
   }
   hide() {
     this.setVisibility(false);
-    // const {handlers} = this;
-    // Object.keys(handlers).forEach((key) => {
-    //   document.removeEventListener(key, handlers[key]);
-    // });
   }
   nextPosition() {
     this.setCaretPosition(min(this.caretPosition + 1, 3));
@@ -121,13 +117,13 @@ export default class ScoreInput {
   show(score) {
     this.score = score;
     this.setVisibility(true);
-    // const {handlers} = this;
-    // Object.keys(handlers).forEach((key) => {
-    //   document.addEventListener(key, handlers[key]);
-    // });
   }
   visibility() {
     return this._visibility;
+  }
+  resetInputValue() {
+    this.name = this.name = [10, 10, 10, 10];
+    this.caretPosition = 0;
   }
   renderUnderscores() {
     this.underscores = new UILabel({

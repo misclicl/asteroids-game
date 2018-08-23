@@ -22,7 +22,7 @@ export default class Projectile extends GameObject {
 
     contextToUse.save();
     contextToUse.translate(x, y);
-    contextToUse.fillStyle = 'rgb(224,255,255)';
+    contextToUse.fillStyle = 'rgba(255,255,255, 0.5)';
     contextToUse.fillRect(0, 0, 2, 2);
 
 

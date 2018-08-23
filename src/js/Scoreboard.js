@@ -49,6 +49,8 @@ export default class Scoreboard {
   setScores(scores) {
     let yStep = 0;
 
+    this.leaders = [];
+
     scores.forEach((record, index) => {
       this.leaders.push(
         new UILabel({

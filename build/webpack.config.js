@@ -7,6 +7,7 @@ const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const cssNano = require('cssnano');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const resolve = (...dir) => path.join(__dirname, '..', ...dir);
 
@@ -23,11 +24,15 @@ const envOptions = {
         disable: true,
       }),
       new CleanWebpackPlugin(['dist']),
+      new CopyWebpackPlugin([{
+        from: resolve('src', 'assets', 'sounds'),
+        to: resolve('dist', 'sounds'),
+      }]),
     ],
   },
   development: {
     devServer: {
-      contentBase: resolve('public'),
+      contentBase: resolve('src', 'assets'),
       hot: true,
       proxy: {
         '/api/**': {

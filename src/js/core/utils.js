@@ -64,7 +64,7 @@ export const drawGlowing = (
   }
 
   context.lineWidth = 1;
-  context.strokeStyle = 'black';
+  context.strokeStyle = '#303738';
   context.stroke();
   context.restore();
 };

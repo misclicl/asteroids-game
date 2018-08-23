@@ -20,8 +20,8 @@ export default class Particle extends GameObject {
 
     context.save();
     context.translate(x, y);
-    context.fillStyle = 'rgba(255,255,255, 0.6)';
-    context.fillRect(0, 0, 1, 1);
+    context.fillStyle = 'rgba(255,255,255, 0.3)';
+    context.fillRect(0, 0, 2, 2);
 
     context.restore();
 

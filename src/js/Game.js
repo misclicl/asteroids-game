@@ -8,7 +8,7 @@ import Vector2d from './core/Vector2d';
 import Saucer from './Entities/Saucer';
 
 import {plotLine} from './core/plotLine';
-import {drawGlowing, randomInt} from './core/utils';
+import {drawGlowing, randomInt, randomFloat} from './core/utils';
 import Observervable from './core/Observable';
 import UILabel from './core/UILabel';
 
@@ -151,6 +151,7 @@ export default class Game {
           }
           if (key === 'Enter') {
             this.scoreInput.submitScores().finally(() => {
+              this.loadScores();
               setTimeout(() => {
                 this.observervable.notify(Game.states.MAIN_MENU);
               });
@@ -208,6 +209,9 @@ export default class Game {
     this.uiCollection.getComponent('highestScoreLabel').setValue(value);
   }
   updateState(state) {
+    if (state === Game.states.GAME_STARTED) {
+      this.lives = Game.defaults.lives;
+    }
     if (state === Game.states.GAME_OVER) {
       this.ship = null;
       this.stage = 1;
@@ -222,7 +226,6 @@ export default class Game {
         }, 2000);
       } else {
         setTimeout(() => {
-          this.lives = 4;
           this.observervable.notify(Game.states.MAIN_MENU);
         }, 2000);
       }
@@ -294,6 +297,7 @@ export default class Game {
       this.uiCollection.getComponent('gameOverLabel').show();
     } else if (state === Game.states.SUBMIT_HIGHSCORE) {
       this.uiCollection.getComponent('gameOverLabel').hide();
+      this.scoreInput.resetInputValue();
       this.scoreInput.show(this.currentScore);
     }
   }
@@ -313,7 +317,6 @@ export default class Game {
     } else if (state === Game.states.GAME_RESUMED) {
       this.paused = false;
     } else if (state === Game.states.GAME_OVER) {
-
     } else if (state === Game.states.SUBMIT_HIGHSCORE) {
       this.asteroids = [];
       this.ufo = null;
@@ -335,7 +338,8 @@ export default class Game {
   }
   launchStage(stage, delay = 0) {
     setTimeout(() => {
-      this.spawnAsteroids(2 + 2 * stage);
+      // this.spawnAsteroids(2 + 2 * stage);
+      this.spawnAsteroids(1);
     }, delay);
   }
   createShip() {
@@ -393,22 +397,25 @@ export default class Game {
       const yMax = HEIGHT * 0.8;
       const xPosition = Math.random() > 0.5 ? -50 : WIDTH + 50;
       const multiplier = xPosition > 0 ? -1 : 1;
-      const velocityVector = new Vector2d(0, 0);
-      // const velocityVector = new Vector2d(
-      //   randomFloat(3, 4),
-      //   randomFloat(-1, 1.5)
-      // ).mult(multiplier);
+      // const velocityVector = new Vector2d(0, 0);
+
+      const velocityVector = new Vector2d(
+        randomFloat(3, 4),
+        randomFloat(-1, 1.5)
+      ).mult(multiplier);
 
       const ufo = new Saucer({
         position: [300, 300],
-        // position: [xPosition, randomInt(yMin, yMax)],
+        position: [xPosition, randomInt(yMin, yMax)],
         context: this.context,
         velocity: velocityVector,
       });
 
+      ufo.direction = multiplier > 0 ? 'right' : 'left';
+
       const ufoCollider = new Collider({
         size: ufo.size + 4,
-        visible: true,
+        // visible: true,
         context: this.context,
       });
       ufo.setCollider(ufoCollider);
@@ -484,6 +491,9 @@ export default class Game {
     this.scoreInput.render();
     const {ufo, ship, context} = this;
 
+    this.uiCollection.render(null, !this.paused);
+    this.drawLiveIcons();
+
     if (!this.paused) {
       this.timer++;
       this.stageTimer++;
@@ -494,11 +504,8 @@ export default class Game {
       (this.state == Game.states.GAME_STARTED ||
         this.state == Game.states.GAME_RESUMED)
     ) {
-      console.log(this.stageTimer);
       this.spawnSaucer();
     }
-
-    this.uiCollection.render(null, !this.paused);
 
     if (ufo) {
       ufo.render(null, !this.paused);
@@ -512,10 +519,17 @@ export default class Game {
         16
       );
 
+      // destroying sauser if it goes beyond horizontal viewport edges
+      if (
+        (ufo.direction === 'left' && ufo.position.x < -20) ||
+        (ufo.direction === 'right' && ufo.position.x > WIDTH + 20)
+      ) {
+        this.ufo = null;
+        this.stageTimer = 0;
+      }
       ufo.setPosition(saucerX, newSaucerY);
     }
 
-    this.drawLiveIcons();
     if (ship) {
       ship.render(null, !this.paused);
 
@@ -524,6 +538,26 @@ export default class Game {
         ...keepInScreenRange(x, y, WIDTH, HEIGHT, ship.size / 2)
       );
       this.shipController.run();
+
+      if (ufo && ufo.getCollider().collides(ship.getCollider())) {
+        this.ship = null;
+        this.ufo = null;
+        this.stageTimer = 0;
+
+        this.shipController.reset();
+        this.lives--;
+        this.explosions.push(
+          new Explosion({
+            position: ship.getPosition(),
+          })
+        );
+
+        if (this.lives > 0) {
+          this.respawn();
+        } else {
+          this.observervable.notify(Game.states.GAME_OVER);
+        }
+      }
 
       ship.projectiles.forEach((projectile, projectileIdx) => {
         const [pX, pY] = projectile.getPosition();
@@ -577,6 +611,7 @@ export default class Game {
         });
       });
     }
+
     this.asteroids.forEach((asteroid, asteroidIdx) => {
       if (ship) {
         if (ship.getCollider().collides(asteroid.getCollider())) {
@@ -601,6 +636,7 @@ export default class Game {
       if (ufo) {
         if (ufo.getCollider().collides(asteroid.getCollider())) {
           this.ufo = null;
+          this.stageTimer = 0;
           this.asteroids.splice(asteroidIdx, 1);
 
           this.explosions.push(
@@ -638,6 +674,9 @@ export default class Game {
     });
   }
   preload() {
+    this.loadScores();
+  }
+  loadScores() {
     fetch('/api/projects/asteroids/highest-score', {
       method: 'get',
       headers: {
@@ -652,13 +691,13 @@ export default class Game {
             this.setHighestScore(data[0].score.toString());
             this.scores = data;
             this.scoreboard.setScores(data);
-            this.observervable.notify(Game.states.MAIN_MENU);
           })
           .finally(() => {
             this.observervable.notify(Game.states.MAIN_MENU);
           });
       })
       .catch((error) => {
+        console.warn(error); // eslint-disable-line
         this.observervable.notify(Game.states.MAIN_MENU);
       });
   }
@@ -675,5 +714,5 @@ Game.states = {
 };
 Game.defaults = {
   state: Game.states.INITIAL_LOADING,
-  lives: 1,
+  lives: 4,
 };
