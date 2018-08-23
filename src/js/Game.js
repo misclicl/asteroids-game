@@ -338,8 +338,7 @@ export default class Game {
   }
   launchStage(stage, delay = 0) {
     setTimeout(() => {
-      // this.spawnAsteroids(2 + 2 * stage);
-      this.spawnAsteroids(1);
+      this.spawnAsteroids(2 + 2 * stage);
     }, delay);
   }
   createShip() {
