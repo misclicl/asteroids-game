@@ -7,4 +7,4 @@
 * All assets including font and sounds created from scratch
 * Custom rendering system based on Bresenham's algorithm
 * Online scoreboard
-* No libries were used
+* No libraries used
