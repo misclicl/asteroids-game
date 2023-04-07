@@ -25,7 +25,7 @@ class Ship extends GameObject {
     this._displayedShape = this._shape;
 
     this.engineFire = new EngineFire({
-      position: this.position,
+      position: [this.position.x, this.position.y],
       rotation: this._rotation,
       sizeShift: this.size / 2,
     });

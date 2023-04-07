@@ -676,16 +676,9 @@ export default class Game {
     this.loadScores();
   }
   loadScores() {
-    fetch('/api/projects/asteroids/highest-score', {
-      method: 'get',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((response) => {
+    Promise.resolve([]).then((response) => {
         response
-          .json()
+          // .json()
           .then((data) => {
             this.setHighestScore(data[0].score.toString());
             this.scores = data;

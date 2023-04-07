@@ -18,6 +18,7 @@ export default class EngineFire extends GameObject {
     if (this.counter <= 4 && this.counter >= 0) {
       const [x, y] = this.getPosition();
       const contextToUse = context || this.context;
+      const rand = randomFloat(0, 1);
 
       drawGlowing(
         [
@@ -34,7 +35,6 @@ export default class EngineFire extends GameObject {
       contextToUse.translate(x, y);
       contextToUse.rotate(this.getRotation());
 
-      const rand = randomFloat(0, 1);
       plotLine(
         new Vector2d(2, 1 + this.sizeShift),
         new Vector2d(0, (rand > 0.95 ? 10 : 8) + this.sizeShift),
