@@ -1,7 +1,7 @@
 ## Asteroids 1979 Game Clone
 <img src="img/demo.gif" alt="icon">
 
-[Play the game](https://programma-computer-foxpuycxjk.now.sh/asteroids/)
+[Play the game](https://asteroids-game-cblh.vercel.app/)
 
 ### Features
 
