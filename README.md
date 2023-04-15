@@ -1,7 +1,7 @@
 ## Asteroids 1979 Game Clone
 <img src="img/demo.gif" alt="icon">
 
-[Play the game](https://asteroids-game-cblh.vercel.app/)
+[Play the game](https://asteroids-game-ten.vercel.app/)
 
 ### Features
 
